@@ -30,12 +30,14 @@ export class RedisKey<
     | Record<string, TAnySchema>,
 > {
   readonly schema: T;
+
   constructor(
     readonly text: string,
     schema: T,
   ) {
     this.schema = createRedisTransform(schema) as any;
   }
+
   /**
    * Derive a new key by prefixing the current key with the given keys. When multiple keys are
    * passed in, they will be joined with a colon.
@@ -43,6 +45,15 @@ export class RedisKey<
   join(...keys: [string, ...string[]]) {
     return new RedisKey(`${this.text}:${keys.join(":")}`, this.schema);
   }
+
+  /**
+   * Use this key as a namespace for a pattern. The `pattern` is appended
+   * to the current key with a colon between them.
+   */
+  match(pattern: string) {
+    return this.text + ":" + pattern;
+  }
+
   /**
    * Encode a JS value to the type of the key.
    */
