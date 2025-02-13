@@ -29,35 +29,55 @@ export class Subscriber {
     await this.client.close();
   }
 
+  async subscribe(
+    channel: string,
+    handler: MessageHandler,
+  ): Promise<() => void>;
+
   async subscribe<T extends TSchema>(
     channel: RedisKey<T>,
     handler: MessageHandler<T>,
+  ): Promise<() => void>;
+
+  async subscribe(
+    channel: string | RedisKey<TAnySchema>,
+    handler: MessageHandler,
   ): Promise<() => void> {
-    let handlers = this.subscriptions.get(channel.text);
+    if (typeof channel !== "string") {
+      channel = channel.text;
+    }
+    let handlers = this.subscriptions.get(channel);
     if (!handlers) {
       handlers = new Set();
-      this.subscriptions.set(channel.text, handlers);
-      await this.client.sendRaw("SUBSCRIBE", channel.text);
+      this.subscriptions.set(channel, handlers);
+      await this.client.sendRaw("SUBSCRIBE", channel);
     }
     handlers.add(handler);
     return () => this.unsubscribe(channel, handler);
   }
 
+  async unsubscribe(channel: string, handler: MessageHandler): Promise<void>;
+
   async unsubscribe<T extends TSchema>(
     channel: RedisKey<T>,
     handler: MessageHandler<T>,
-  ): Promise<void> {
-    const handlers = this.subscriptions.get(channel.text);
-    if (handlers?.has(handler)) {
-      handlers.delete(handler);
-      if (handlers.size === 0) {
-        this.subscriptions.delete(channel.text);
+  ): Promise<void>;
 
-        if (this.subscriptions.size === 0) {
-          await this.close();
-        } else {
-          await this.client.sendRaw("UNSUBSCRIBE", channel.text);
-        }
+  async unsubscribe(
+    channel: string | RedisKey<TAnySchema>,
+    handler: MessageHandler,
+  ): Promise<void> {
+    if (typeof channel !== "string") {
+      channel = channel.text;
+    }
+    const handlers = this.subscriptions.get(channel);
+    if (handlers?.delete(handler) && handlers.size === 0) {
+      this.subscriptions.delete(channel);
+
+      if (this.subscriptions.size === 0) {
+        await this.close();
+      } else {
+        await this.client.sendRaw("UNSUBSCRIBE", channel);
       }
     }
   }
