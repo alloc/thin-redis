@@ -1,7 +1,7 @@
 import { TAnySchema, TSchema } from "@sinclair/typebox";
 import { RedisCommand, RedisValue } from "./command";
 import { RedisKey } from "./key";
-import { SubscribeCallback, Subscriber } from "./subscriber";
+import { SubscribeCallback, SubscribeOptions, Subscriber } from "./subscriber";
 import { ConnectionInstance, RedisClientOptions, RedisResponse } from "./type";
 import { createParser } from "./utils/create-parser";
 import { encodeCommand } from "./utils/encode-command";
@@ -267,18 +267,21 @@ export class RedisClient {
   async subscribe(
     channel: string,
     callback: SubscribeCallback,
+    options?: SubscribeOptions,
   ): Promise<() => void>;
 
   async subscribe<T extends TSchema>(
     channel: RedisKey<T>,
     callback: SubscribeCallback<T>,
+    options?: SubscribeOptions,
   ): Promise<() => void>;
 
   async subscribe(
     channel: string | RedisKey<TAnySchema>,
     callback: SubscribeCallback,
+    options?: SubscribeOptions,
   ): Promise<() => void> {
-    return this.getSubscriber().subscribe(channel, callback);
+    return this.getSubscriber().subscribe(channel, callback, options);
   }
 
   async unsubscribe(

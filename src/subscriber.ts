@@ -7,16 +7,23 @@ export interface SubscribeCallback<T extends TSchema = TAnySchema> {
   (message: Value<T>, channel: string): void;
 }
 
+export type SubscribeOptions = {
+  once?: boolean;
+};
+
 export class Subscriber {
   private client: RedisClient;
-  private callbackMap = new Map<string, Set<SubscribeCallback>>();
+  private callbackMap: Map<
+    string,
+    Map<SubscribeCallback, SubscribeOptions | undefined>
+  > = new Map();
 
   constructor(options: RedisClientOptions) {
     this.client = new RedisClient({
       ...options,
       onReply(reply) {
         console.log("onReply: %O", reply);
-        // this.dispatchMessage(reply);
+        // this.dispatch(reply);
         return false;
       },
     });
@@ -29,17 +36,18 @@ export class Subscriber {
   async subscribe(
     channel: string | RedisKey<TAnySchema>,
     callback: SubscribeCallback,
+    options?: SubscribeOptions,
   ): Promise<() => void> {
     if (typeof channel !== "string") {
       channel = channel.text;
     }
     let callbacks = this.callbackMap.get(channel);
     if (!callbacks) {
-      callbacks = new Set();
+      callbacks = new Map();
       this.callbackMap.set(channel, callbacks);
       await this.client.sendRaw("SUBSCRIBE", channel);
     }
-    callbacks.add(callback);
+    callbacks.set(callback, options);
     return () => this.unsubscribe(channel, callback);
   }
 
@@ -62,10 +70,15 @@ export class Subscriber {
     }
   }
 
-  private dispatchMessage(channel: string, message: string): void {
+  private dispatch(channel: string, message: string): void {
     const callbacks = this.callbackMap.get(channel);
     if (callbacks) {
-      callbacks.forEach((callback) => callback(message, channel));
+      callbacks.forEach((options, callback) => {
+        if (options?.once) {
+          this.unsubscribe(channel, callback);
+        }
+        callback(message, channel);
+      });
     }
   }
 }
