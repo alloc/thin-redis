@@ -28,6 +28,17 @@ export function GET<T extends TSchema>(
 }
 
 /**
+ * Get all keys that match the given pattern.
+ */
+export function KEYS(pattern: string) {
+  return new RedisCommand<string[]>(["KEYS", pattern]);
+}
+
+//
+// Write commands
+//
+
+/**
  * Get the value of key and optionally set its expiration. `GETEX` is
  * similar to {@link GET}, but is a write command with additional options.
  */
@@ -39,13 +50,6 @@ export function GETEX<T extends TSchema>(
     ["GETEX", key.text, ...encodeModifiers(modifiers)],
     (result) => (result !== null ? key.decode(result) : result),
   );
-}
-
-/**
- * Get all keys that match the given pattern.
- */
-export function KEYS(pattern: string) {
-  return new RedisCommand<string[]>(["KEYS", pattern]);
 }
 
 /**
@@ -112,6 +116,24 @@ export function INCR(key: RedisKey<TNumber>) {
 export function INCRBY(key: RedisKey<TNumber>, amount: number) {
   return new RedisCommand<number>(["INCRBY", key.text, amount]);
 }
+
+/**
+ * Publish a message to a channel.
+ */
+export function PUBLISH<T extends TSchema>(
+  channel: RedisKey<T>,
+  message: Value<T>,
+) {
+  return new RedisCommand<number>([
+    "PUBLISH",
+    channel.text,
+    channel.encode(message),
+  ]);
+}
+
+//
+// Hash commands
+//
 
 /**
  * Get the value of a field in a hash.
@@ -181,20 +203,6 @@ function encodeHashEntries(
     entries[i][1] = key.encodeField(entries[i][0], entries[i][1]);
   }
   return entries as [string, RedisValue][];
-}
-
-/**
- * Publish a message to a channel.
- */
-export function PUBLISH<T extends TSchema>(
-  channel: RedisKey<T>,
-  message: Value<T>,
-) {
-  return new RedisCommand<number>([
-    "PUBLISH",
-    channel.text,
-    channel.encode(message),
-  ]);
 }
 
 //
