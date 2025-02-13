@@ -17,13 +17,16 @@ npm install redis-on-workers
 This is the minimal example to connect to a Redis server.
 
 ```ts
-import { createRedis } from "redis-on-workers";
+import { RedisClient, GET, RedisKey, Type } from "redis-on-workers";
 
-const redis = createRedis("redis://<username>:<password>@<host>:<port>");
+const redis = new RedisClient({
+  url: "redis://<username>:<password>@<host>:<port>",
+});
+const key = new RedisKey("foo", Type.String());
 
-await redis.send("SET", "foo", "bar");
+await redis.send(SET(key, "bar"));
 
-const value = await redis.send("GET", "foo");
+const value = await redis.send(GET(key));
 
 console.log(value); // bar
 
@@ -36,9 +39,11 @@ await redis.close();
 This is useful if you want to store binary data. For example, you can store protobuf messages in Redis.
 
 ```ts
-import { createRedis } from "redis-on-workers";
+import { RedisClient } from "redis-on-workers";
 
-const redis = createRedis("redis://<username>:<password>@<host>:<port>");
+const redis = new RedisClient({
+  url: "redis://<username>:<password>@<host>:<port>",
+});
 
 await redis.sendRaw("SET", "foo", "bar");
 
@@ -59,15 +64,64 @@ npm install @arrowood.dev/socket
 
 ## API
 
-### `createRedis(options: CreateRedisOptions | string): RedisInstance`
+### `new RedisClient(options: RedisClientOptions)`
 
 Create a new Redis client, does NOT connect to the server yet, the connection will be established when the first command is sent.
 
 Or you can start connection immediately by using `redis.startConnection()`.
 
-### `CreateRedisOptions`
+### `RedisClientOptions`
 
 - `url` (string): The URL of the Redis server.
 - `tls` (boolean): Whether to use TLS. Default: `false`.
 - `logger` (function): A function to log debug messages.
 - `connectFn` (function): Polyfill for `cloudflare:sockets`'s `connect` function if you're using it in node.js. Default: `undefined`.
+- `onReply` (function): Callback for Redis replies. Default: `undefined`.
+
+## Commands
+
+- `GET(key)`  
+  Get the value of a key.
+- `GETEX(key, ...modifiers)`  
+  Get the value of a key and optionally set its expiration.
+- `SET(key, value, ...modifiers)`  
+  Set the value of a key and optionally set its expiration.
+- `DEL(key, ...keys)`  
+  Delete a key or multiple keys.
+- `INCR(key)`  
+  Increment the value of a key by 1.
+- `DECR(key)`  
+  Decrement the value of a key by 1.
+- `INCRBY(key, amount)`  
+  Increment the value of a key by a specific amount.
+- `DECRBY(key, amount)`  
+  Decrement the value of a key by a specific amount.
+- `KEYS(pattern)`  
+  Get all keys that match the given pattern.
+- `HGET(key, field)`  
+  Get the value of a field in a hash.
+- `HSET(key, field, value)`  
+  Set the value of a field in a hash.
+- `HSET(key, values)`  
+  Set the values of multiple fields in a hash.
+- `PUBLISH(channel, message)`  
+  Publish a message to a channel.
+
+### Modifiers
+
+- `NX()`  
+  Only set the key if it does not already exist.
+- `XX()`  
+  Only set the key if it already exists.
+- `EX(seconds)`  
+  Set the expiration time of a key in seconds.
+- `PX(milliseconds)`  
+  Set the expiration time of a key in milliseconds.
+- `EXAT(timestamp)`  
+  Set the expiration time of a key at a specific Unix time.
+- `PXAT(timestamp)`  
+  Set the expiration time of a key at a specific Unix time in milliseconds.
+- `KEEPTTL()`  
+  Retain the time to live associated with the key.
+- `PERSIST()`  
+  Remove the time to live associated with the key.

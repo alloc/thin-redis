@@ -41,10 +41,16 @@ export function GETEX<T extends TSchema>(
   );
 }
 
+/**
+ * Get all keys that match the given pattern.
+ */
 export function KEYS(pattern: string) {
   return new RedisCommand<string[]>(["KEYS", pattern]);
 }
 
+/**
+ * Set the value of a key and optionally set its expiration.
+ */
 export function SET<T extends TSchema>(
   key: RedisKey<T>,
   value: Value<T>,
@@ -72,26 +78,44 @@ export function SET(
   );
 }
 
+/**
+ * Delete a key or multiple keys.
+ */
 export function DEL(...keys: [RedisKey, ...RedisKey[]]) {
   return new RedisCommand<number>(["DEL", ...keys.map((k) => k.text)]);
 }
 
+/**
+ * Decrement the value of a key by 1.
+ */
 export function DECR(key: RedisKey<TNumber>) {
   return new RedisCommand<number>(["DECR", key.text]);
 }
 
+/**
+ * Decrement the value of a key by a specific amount.
+ */
 export function DECRBY(key: RedisKey<TNumber>, amount: number) {
   return new RedisCommand<number>(["DECRBY", key.text, amount]);
 }
 
+/**
+ * Increment the value of a key by 1.
+ */
 export function INCR(key: RedisKey<TNumber>) {
   return new RedisCommand<number>(["INCR", key.text]);
 }
 
+/**
+ * Increment the value of a key by a specific amount.
+ */
 export function INCRBY(key: RedisKey<TNumber>, amount: number) {
   return new RedisCommand<number>(["INCRBY", key.text, amount]);
 }
 
+/**
+ * Get the value of a field in a hash.
+ */
 export function HGET<
   T extends Record<string, TSchema>,
   TField extends RedisField<T>,
@@ -102,13 +126,17 @@ export function HGET<
   );
 }
 
-// This overload exists only to enable intelli-sense for the `field`
-// parameter before a 3rd argument is defined.
+/**
+ * Set the value of a field in a hash.
+ */
 export function HSET<
   T extends Record<string, TSchema>,
   TField extends RedisField<T>,
 >(key: RedisKey<T>, field: TField): never;
 
+/**
+ * Set the value of a field in a hash.
+ */
 export function HSET<
   T extends Record<string, TSchema>,
   TField extends RedisField<T>,
@@ -118,6 +146,9 @@ export function HSET<
   value: Value<T[TField]>,
 ): RedisCommand<number>;
 
+/**
+ * Set the values of multiple fields in a hash.
+ */
 export function HSET<T extends Record<string, TSchema>>(
   key: RedisKey<T>,
   values: { [K in RedisField<T>]?: Value<T[K]> },
@@ -152,6 +183,9 @@ function encodeHashEntries(
   return entries as [string, RedisValue][];
 }
 
+/**
+ * Publish a message to a channel.
+ */
 export function PUBLISH<T extends TSchema>(
   channel: RedisKey<T>,
   message: Value<T>,
