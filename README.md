@@ -24,7 +24,7 @@ pnpm add @alloc/redis-on-workers
 This is the minimal example to connect to a Redis server.
 
 ```ts
-import { RedisClient, GET, RedisKey } from "@alloc/redis-on-workers";
+import { RedisClient, RedisKey, GET, SET } from "@alloc/redis-on-workers";
 import { Type } from "@sinclair/typebox";
 
 const redis = new RedisClient({
