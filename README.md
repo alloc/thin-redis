@@ -80,6 +80,8 @@ Or you can start connection immediately by using `redis.startConnection()`.
 
 ## Commands
 
+It's relatively straight-forward to add more commands (see [here](https://github.com/aleclarson/redis-on-workers/blob/master/src/commands.ts) for examples). If one is missing that you need, please add it and submit a PR.
+
 - `GET(key)`  
   Get the value of a key.
 - `GETEX(key, ...modifiers)`  
