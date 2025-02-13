@@ -1,5 +1,6 @@
+import { RedisClient } from "./client";
 import { createRedis } from "./create-redis";
-import { CreateRedisOptions } from "./type";
+import { RedisClientOptions } from "./type";
 
 type RedisInstance = ReturnType<typeof createRedis>;
 
@@ -12,8 +13,8 @@ export class Subscriber {
   private subscriptions = new Map<string, Set<MessageHandler>>();
   private isListening: boolean = false;
 
-  constructor(options: CreateRedisOptions) {
-    this.client = createRedis({
+  constructor(options: RedisClientOptions) {
+    this.client = new RedisClient({
       ...options,
       onReply(reply) {
         console.log("onReply: %O", reply);
