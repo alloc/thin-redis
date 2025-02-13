@@ -1,5 +1,7 @@
+import { TAnySchema, TSchema } from "@sinclair/typebox";
 import { RedisCommand, RedisValue } from "./command";
-import { Subscriber } from "./subscriber";
+import { RedisKey } from "./key";
+import { SubscribeCallback, Subscriber } from "./subscriber";
 import { ConnectionInstance, RedisClientOptions, RedisResponse } from "./type";
 import { createParser } from "./utils/create-parser";
 import { encodeCommand } from "./utils/encode-command";
@@ -61,10 +63,6 @@ export class RedisClient {
 
   public get tls() {
     return this.options.tls;
-  }
-
-  public get subscriber() {
-    return (this.subscriberInstance ??= new Subscriber(this.options));
   }
 
   private getConnectConfig() {
@@ -262,6 +260,44 @@ export class RedisClient {
     }
   }
 
+  private getSubscriber() {
+    return (this.subscriberInstance ??= new Subscriber(this.options));
+  }
+
+  async subscribe(
+    channel: string,
+    callback: SubscribeCallback,
+  ): Promise<() => void>;
+
+  async subscribe<T extends TSchema>(
+    channel: RedisKey<T>,
+    callback: SubscribeCallback<T>,
+  ): Promise<() => void>;
+
+  async subscribe(
+    channel: string | RedisKey<TAnySchema>,
+    callback: SubscribeCallback,
+  ): Promise<() => void> {
+    return this.getSubscriber().subscribe(channel, callback);
+  }
+
+  async unsubscribe(
+    channel: string,
+    callback: SubscribeCallback,
+  ): Promise<void>;
+
+  async unsubscribe<T extends TSchema>(
+    channel: RedisKey<T>,
+    callback: SubscribeCallback<T>,
+  ): Promise<void>;
+
+  async unsubscribe(
+    channel: string | RedisKey<TAnySchema>,
+    callback: SubscribeCallback,
+  ): Promise<void> {
+    return this.getSubscriber().unsubscribe(channel, callback);
+  }
+
   public async close(err?: Error) {
     if (err) this.logger?.(`Closing socket due to error: ${err.message}`);
 
@@ -275,5 +311,12 @@ export class RedisClient {
     await connection.socket.close();
     await connection.writer.abort(err);
     await connection.reader.cancel(err);
+  }
+
+  public async closeSubscriptions() {
+    if (!this.subscriberInstance) return;
+
+    await this.subscriberInstance.close();
+    this.subscriberInstance = undefined;
   }
 }

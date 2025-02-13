@@ -27,16 +27,6 @@ export class Subscriber {
   }
 
   async subscribe(
-    channel: string,
-    callback: SubscribeCallback,
-  ): Promise<() => void>;
-
-  async subscribe<T extends TSchema>(
-    channel: RedisKey<T>,
-    callback: SubscribeCallback<T>,
-  ): Promise<() => void>;
-
-  async subscribe(
     channel: string | RedisKey<TAnySchema>,
     callback: SubscribeCallback,
   ): Promise<() => void> {
@@ -52,16 +42,6 @@ export class Subscriber {
     callbacks.add(callback);
     return () => this.unsubscribe(channel, callback);
   }
-
-  async unsubscribe(
-    channel: string,
-    callback: SubscribeCallback,
-  ): Promise<void>;
-
-  async unsubscribe<T extends TSchema>(
-    channel: RedisKey<T>,
-    callback: SubscribeCallback<T>,
-  ): Promise<void>;
 
   async unsubscribe(
     channel: string | RedisKey<TAnySchema>,
