@@ -36,7 +36,10 @@ export class Subscriber {
     await this.client.close();
   }
 
-  async subscribe(channel: string, handler: MessageHandler): Promise<void> {
+  async subscribe(
+    channel: string,
+    handler: MessageHandler,
+  ): Promise<() => void> {
     let handlers = this.subscriptions.get(channel);
     if (!handlers) {
       handlers = new Set();
@@ -44,6 +47,7 @@ export class Subscriber {
       await this.client.sendRaw("SUBSCRIBE", channel);
     }
     handlers.add(handler);
+    return () => this.unsubscribe(channel, handler);
   }
 
   async unsubscribe(channel: string, handler: MessageHandler): Promise<void> {
