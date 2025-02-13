@@ -6,6 +6,6 @@ export type RedisValue = Static<TRedisValue>;
 export class RedisCommand<TResult = unknown> {
   constructor(
     readonly args: [string, ...RedisValue[]],
-    readonly decode?: (result: unknown) => TResult,
+    readonly decode?: (result: any) => TResult,
   ) {}
 }
