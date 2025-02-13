@@ -1,13 +1,20 @@
-# redis-on-workers
+# @alloc/redis-on-workers
 
 Connect to your Redis server using `cloudflare:sockets`.
 
 This package is designed to work with Cloudflare Workers, but it can also be used in node.js thanks to the implementation of [`cloudflare:sockets` for node.js](https://github.com/Ethan-Arrowood/socket).
 
+> [!NOTE]
+> This is a fork of [redis-on-workers](https://github.com/kane50613/redis-on-workers) with some improvements:
+>
+> - Modular commands and key types for tree-shakeable type safety.
+> - Integrated with `@sinclair/typebox` for static type-checking and runtime validation.
+> - **Experimental:** Supports pub-sub with dedicated `Subscriber` class.
+
 ## Installation
 
 ```sh
-npm install redis-on-workers
+pnpm add @alloc/redis-on-workers
 ```
 
 ## Usage
@@ -17,7 +24,8 @@ npm install redis-on-workers
 This is the minimal example to connect to a Redis server.
 
 ```ts
-import { RedisClient, GET, RedisKey, Type } from "redis-on-workers";
+import { RedisClient, GET, RedisKey } from "redis-on-workers";
+import { Type } from "@sinclair/typebox";
 
 const redis = new RedisClient({
   url: "redis://<username>:<password>@<host>:<port>",
@@ -59,7 +67,7 @@ console.log(decoder.decode(value)); // bar
 Please install the node.js polyfill for `cloudflare:sockets` to use this package in node.js.
 
 ```sh
-npm install @arrowood.dev/socket
+pnpm add @arrowood.dev/socket
 ```
 
 ## API
