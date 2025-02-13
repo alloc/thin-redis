@@ -24,7 +24,7 @@ pnpm add @alloc/redis-on-workers
 This is the minimal example to connect to a Redis server.
 
 ```ts
-import { RedisClient, GET, RedisKey } from "redis-on-workers";
+import { RedisClient, GET, RedisKey } from "@alloc/redis-on-workers";
 import { Type } from "@sinclair/typebox";
 
 const redis = new RedisClient({
@@ -47,7 +47,7 @@ await redis.close();
 This is useful if you want to store binary data. For example, you can store protobuf messages in Redis.
 
 ```ts
-import { RedisClient } from "redis-on-workers";
+import { RedisClient } from "@alloc/redis-on-workers";
 
 const redis = new RedisClient({
   url: "redis://<username>:<password>@<host>:<port>",
@@ -88,7 +88,7 @@ Or you can start connection immediately by using `redis.startConnection()`.
 
 ## Commands
 
-It's relatively straight-forward to add more commands (see [here](https://github.com/aleclarson/redis-on-workers/blob/master/src/commands.ts) for examples). If one is missing that you need, please add it and submit a PR.
+It's relatively straight-forward to add more commands (see [here](https://github.com/alloc/redis-on-workers/blob/master/src/commands.ts) for examples). If one is missing that you need, please add it and submit a PR.
 
 - `GET(key)`  
   Get the value of a key.
