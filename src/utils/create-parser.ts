@@ -3,7 +3,7 @@
 // 2. remove "string_decoder" module, just return Uint8Array
 // 3. replace "redis-errors" with "Error"
 
-import { CreateParserOptions } from "../../type";
+import { CreateParserOptions } from "../type";
 
 let bufferPool: Uint8Array | undefined;
 let bufferOffset = 0;

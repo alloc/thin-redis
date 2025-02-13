@@ -1,17 +1,13 @@
 import type { connect as nodeConnect, Socket } from "@arrowood.dev/socket";
 import type { connect } from "cloudflare:sockets";
 
-export type Command = [string, ...(string | number | Uint8Array)[]];
-
 export type RedisResponse = Uint8Array | number | null | RedisResponse[];
 
-export type StringifyRedisResponse = string | number | null | StringifyRedisResponse[];
-
-interface BaseRedisOptions {
-  tls?: boolean;
-  logger?: (...message: string[]) => void;
-  connectFn?: typeof connect | typeof nodeConnect;
-}
+export type StringifyRedisResponse =
+  | string
+  | number
+  | null
+  | StringifyRedisResponse[];
 
 export type RedisConnectionOptions =
   | {
@@ -25,7 +21,12 @@ export type RedisConnectionOptions =
       database?: string;
     };
 
-export type CreateRedisOptions = BaseRedisOptions & RedisConnectionOptions;
+export type RedisClientOptions = {
+  tls?: boolean;
+  logger?: (...message: string[]) => void;
+  connectFn?: typeof connect | typeof nodeConnect;
+  onReply?: (reply: RedisResponse) => boolean;
+} & RedisConnectionOptions;
 
 export interface CreateParserOptions {
   onReply: (reply: RedisResponse) => void;

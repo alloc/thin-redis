@@ -1,23 +1,21 @@
-import {
-  Command,
-  ConnectionInstance,
-  CreateRedisOptions,
-  RedisResponse,
-} from "../type";
+import { RedisCommand, RedisValue } from "./command";
+import { Subscriber } from "./subscriber";
+import { ConnectionInstance, RedisClientOptions, RedisResponse } from "./type";
 import { createParser } from "./utils/create-parser";
 import { encodeCommand } from "./utils/encode-command";
 import { getConnectFn } from "./utils/get-connect-fn";
 import { promiseWithResolvers, WithResolvers } from "./utils/promise";
 import { stringifyResult } from "./utils/stringify-result";
 
-export class RedisInstance {
+export class RedisClient {
   private encoder = new TextEncoder();
   private decoder = new TextDecoder();
 
   private promiseQueue: WithResolvers<RedisResponse>[] = [];
 
-  public options: CreateRedisOptions;
+  public options: RedisClientOptions;
   private connectionInstance?: ConnectionInstance;
+  private subscriberInstance?: Subscriber;
   public config;
 
   private isInitialized = false;
@@ -34,6 +32,10 @@ export class RedisInstance {
             : String(reply),
         );
 
+      if (this.options.onReply?.(reply)) {
+        return;
+      }
+
       this.promiseQueue.shift()?.resolve(reply);
     },
     onError: (err) => {
@@ -44,34 +46,25 @@ export class RedisInstance {
     },
   });
 
-  constructor(options: CreateRedisOptions) {
+  constructor(options: RedisClientOptions) {
     this.options = options;
     this.config = this.getConnectConfig();
   }
 
-  get connected() {
+  public get connected() {
     return !!this.connectionInstance;
   }
 
-  get logger() {
+  public get logger() {
     return this.options.logger;
   }
 
-  get connectFn() {
-    return this.options.connectFn;
-  }
-
-  get tls() {
+  public get tls() {
     return this.options.tls;
   }
 
-  get connection() {
-    if (!this.connectionInstance)
-      throw new Error(
-        "Redis connection not started, call `startConnection` first",
-      );
-
-    return this.connectionInstance;
+  public get subscriber() {
+    return (this.subscriberInstance ??= new Subscriber(this.options));
   }
 
   private getConnectConfig() {
@@ -132,7 +125,7 @@ export class RedisInstance {
   }
 
   private async createConnection() {
-    const connect = await getConnectFn(this.connectFn);
+    const connect = await getConnectFn(this.options.connectFn);
 
     this.options.logger?.(
       "Connecting to",
@@ -162,7 +155,7 @@ export class RedisInstance {
   }
 
   private getInitializeCommands() {
-    const commands: Command[] = [];
+    const commands: [string, ...RedisValue[]][] = [];
 
     if (this.config.password) commands.push(["AUTH", this.config.password]);
 
@@ -171,31 +164,32 @@ export class RedisInstance {
     return commands;
   }
 
-  public async sendOnce(...args: Command) {
+  public async sendOnce<TResult>(command: RedisCommand<TResult>) {
     try {
-      return await this.send(...args);
+      return await this.send(command);
     } finally {
       await this.close();
     }
   }
 
-  public async sendOnceRaw(...args: Command) {
+  public async sendOnceRaw(...command: [string, ...RedisValue[]]) {
     try {
-      return await this.sendRaw(...args);
+      return await this.sendRaw(...command);
     } finally {
       await this.close();
     }
   }
 
-  public async send(...args: Command) {
-    return stringifyResult(await this.sendRaw(...args));
+  public async send<TResult>(command: RedisCommand<TResult>) {
+    const rawResult = stringifyResult(await this.sendRaw(...command.args));
+    return command.decode ? command.decode(rawResult) : (rawResult as TResult);
   }
 
-  public async sendRaw(...args: Command) {
+  public async sendRaw(...command: [string, ...RedisValue[]]) {
     if (!this.connectionInstance) await this.startConnection();
 
     try {
-      return await this.unsafeSend(args);
+      return await this.unsafeSend(command);
     } catch (e) {
       await this.close();
 
@@ -203,10 +197,12 @@ export class RedisInstance {
     }
   }
 
-  private async unsafeSend(command: Command) {
-    const commands: Command[] = [];
+  private async unsafeSend(command: [string, ...RedisValue[]]) {
+    const commands: [string, ...RedisValue[]][] = [];
 
-    if (!this.isInitialized) commands.push(...this.getInitializeCommands());
+    if (!this.isInitialized) {
+      commands.push(...this.getInitializeCommands());
+    }
 
     commands.push(command);
 
@@ -215,7 +211,9 @@ export class RedisInstance {
     return result.at(-1) ?? null;
   }
 
-  private async writeCommandsToConnection(commands: Command[]) {
+  private async writeCommandsToConnection(
+    commands: [string, ...RedisValue[]][],
+  ) {
     const chunks: Array<string | Uint8Array> = [];
 
     for (const command of commands) {
@@ -235,7 +233,7 @@ export class RedisInstance {
       chunks.push(...payload);
     }
 
-    const connection = this.connection;
+    const connection = this.connectionInstance!;
 
     for (const chunk of chunks) {
       await connection.writer.write(

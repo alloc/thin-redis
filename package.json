@@ -35,8 +35,12 @@
   },
   "type": "module",
   "license": "MIT",
+  "peerDependencies": {
+    "@sinclair/typebox": "*"
+  },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241011.0",
+    "@sinclair/typebox": "^0.34.21",
     "@types/node": "^22.7.5",
     "prettier": "^3.3.3",
     "prettier-plugin-organize-imports": "^4.1.0",
