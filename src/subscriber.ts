@@ -13,7 +13,6 @@ interface MessageHandler<T extends TSchema = TAnySchema> {
 export class Subscriber {
   private client: RedisInstance;
   private subscriptions = new Map<string, Set<MessageHandler>>();
-  private isListening: boolean = false;
 
   constructor(options: RedisClientOptions) {
     this.client = new RedisClient({
@@ -26,15 +25,7 @@ export class Subscriber {
     });
   }
 
-  async connect(): Promise<void> {
-    if (!this.isListening) {
-      this.isListening = true;
-      await this.client.startConnection();
-    }
-  }
-
-  async disconnect(): Promise<void> {
-    this.isListening = false;
+  async close(): Promise<void> {
     await this.client.close();
   }
 
@@ -63,7 +54,7 @@ export class Subscriber {
         this.subscriptions.delete(channel.text);
 
         if (this.subscriptions.size === 0) {
-          await this.disconnect();
+          await this.close();
         } else {
           await this.client.sendRaw("UNSUBSCRIBE", channel.text);
         }
