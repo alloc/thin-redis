@@ -293,8 +293,20 @@ export function SMEMBERS<T extends TSchema>(key: RedisKey<T>) {
 }
 
 /**
+ * Remove and return a random member from a set
+ */
+export function SPOP<T extends TSchema>(
+  key: RedisKey<T>,
+): RedisCommand<Value<T> | null>;
+
+/**
  * Remove and return one or multiple random members from a set
  */
+export function SPOP<T extends TSchema>(
+  key: RedisKey<T>,
+  count: number,
+): RedisCommand<Value<T>[]>;
+
 export function SPOP<T extends TSchema>(key: RedisKey<T>, count?: number) {
   return new RedisCommand<Value<T> | Value<T>[] | null>(
     count ? ["SPOP", key.text, count.toString()] : ["SPOP", key.text],
