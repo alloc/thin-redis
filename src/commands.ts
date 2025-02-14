@@ -11,19 +11,19 @@ import {
 /** Get the value of a key */
 export function GET<T extends TSchema>(
   key: RedisKey<T>,
-): RedisCommand<Value<T> | null>;
+): RedisCommand<Value<T> | undefined>;
 
 /** Return the previous value stored at this key */
 export function GET(): GET;
 
 export function GET<T extends TSchema>(
   key?: RedisKey<T>,
-): GET | RedisCommand<Value<T> | null> {
+): GET | RedisCommand<Value<T> | undefined> {
   if (!key) {
     return new RedisModifier("GET");
   }
   return new RedisCommand(["GET", key.text], (result) =>
-    result !== null ? key.decode(result) : result,
+    result !== null ? key.decode(result) : undefined,
   );
 }
 
@@ -61,9 +61,9 @@ export function GETEX<T extends TSchema>(
   key: RedisKey<T>,
   ...modifiers: Modifiers<[EX | PX | EXAT | PXAT | PERSIST]>
 ) {
-  return new RedisCommand<Value<T> | null>(
+  return new RedisCommand<Value<T> | undefined>(
     ["GETEX", key.text, ...encodeModifiers(modifiers)],
-    (result) => (result !== null ? key.decode(result) : result),
+    (result) => (result !== null ? key.decode(result) : undefined),
   );
 }
 
@@ -76,7 +76,7 @@ export function SET<T extends TSchema>(
   ...modifiers: Modifiers<
     [NX | XX, Require<GET>, EX | PX | EXAT | PXAT | KEEPTTL]
   >
-): RedisCommand<Value<T> | null>;
+): RedisCommand<Value<T> | undefined>;
 
 export function SET<T extends TSchema>(
   key: RedisKey<T>,
@@ -92,7 +92,7 @@ export function SET(
   return new RedisCommand(
     ["SET", key.text, key.encode(value), ...encodeModifiers(modifiers)],
     modifiers.some((m) => m?.token === "GET")
-      ? (result) => (result !== null ? key.decode(result) : result)
+      ? (result) => (result !== null ? key.decode(result) : undefined)
       : (result) => result === "OK",
   );
 }
@@ -297,7 +297,7 @@ export function SMEMBERS<T extends TSchema>(key: RedisKey<T>) {
  */
 export function SPOP<T extends TSchema>(
   key: RedisKey<T>,
-): RedisCommand<Value<T> | null>;
+): RedisCommand<Value<T> | undefined>;
 
 /**
  * Remove and return one or multiple random members from a set
@@ -308,10 +308,10 @@ export function SPOP<T extends TSchema>(
 ): RedisCommand<Value<T>[]>;
 
 export function SPOP<T extends TSchema>(key: RedisKey<T>, count?: number) {
-  return new RedisCommand<Value<T> | Value<T>[] | null>(
+  return new RedisCommand<Value<T> | Value<T>[] | undefined>(
     count ? ["SPOP", key.text, count.toString()] : ["SPOP", key.text],
     (reply) => {
-      if (reply === null) return null;
+      if (reply === null) return undefined;
       return Array.isArray(reply)
         ? reply.map((value) => key.decode(value))
         : key.decode(reply);
