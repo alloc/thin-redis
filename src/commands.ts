@@ -82,7 +82,7 @@ export function SET<T extends TSchema>(
   key: RedisKey<T>,
   value: Value<T>,
   ...modifiers: Modifiers<[NX | XX, EX | PX | EXAT | PXAT | KEEPTTL]>
-): RedisCommand<"OK" | null>;
+): RedisCommand<boolean>;
 
 export function SET(
   key: RedisKey<any>,
@@ -93,7 +93,7 @@ export function SET(
     ["SET", key.text, key.encode(value), ...encodeModifiers(modifiers)],
     modifiers.some((m) => m?.token === "GET")
       ? (result) => (result !== null ? key.decode(result) : result)
-      : undefined,
+      : (result) => result === "OK",
   );
 }
 
