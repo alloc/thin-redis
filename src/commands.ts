@@ -39,6 +39,21 @@ export function KEYS(pattern: string) {
 //
 
 /**
+ * Set a timeout (in seconds) on a given key. After the timeout has
+ * expired, the key will automatically be deleted.
+ */
+export function EXPIRE(
+  key: RedisKey<any>,
+  timeout: number,
+  ...modifiers: Modifiers<[XX | NX | GT | LT]>
+) {
+  return new RedisCommand<boolean>(
+    ["EXPIRE", key.text, timeout, ...encodeModifiers(modifiers)],
+    (result) => result === 1,
+  );
+}
+
+/**
  * Get the value of key and optionally set its expiration. `GETEX` is
  * similar to {@link GET}, but is a write command with additional options.
  */
@@ -327,6 +342,14 @@ export type NX = StaticModifier<typeof NX>;
 /** Only set this key if it already exists */
 export const XX = /* #__PURE__ */ createModifier("XX");
 export type XX = StaticModifier<typeof XX>;
+
+/** Set expiry only when the new expiry is greater than current one */
+export const GT = /* #__PURE__ */ createModifier("GT");
+export type GT = StaticModifier<typeof GT>;
+
+/** Set expiry only when the new expiry is less than current one */
+export const LT = /* #__PURE__ */ createModifier("LT");
+export type LT = StaticModifier<typeof LT>;
 
 /** Expiry in seconds */
 export const EX = /* #__PURE__ */ createModifier("EX", Type.Number());
