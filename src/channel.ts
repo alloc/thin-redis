@@ -15,6 +15,16 @@ export class RedisChannel<
   ) {
     super(schema);
   }
+
+  /**
+   * Derive a subchannel by prefixing the current channel with the given
+   * keys. When multiple keys are passed in, they will be joined with a
+   * colon.
+   */
+  join(...keys: (string | number)[]) {
+    if (keys.length === 0) return this;
+    return new RedisChannel(`${this.text}:${keys.join(":")}`, this.schema);
+  }
 }
 
 /**
