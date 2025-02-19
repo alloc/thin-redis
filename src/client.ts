@@ -1,7 +1,7 @@
-import { TAnySchema, TSchema } from "@sinclair/typebox";
+import { TSchema } from "@sinclair/typebox";
+import { RedisChannel, RedisChannelPattern } from "./channel";
 import { RedisCommand, RedisValue } from "./command";
-import { RedisKey } from "./key";
-import { SubscribeCallback, SubscribeOptions, Subscriber } from "./subscriber";
+import { MessageEvent, Subscriber } from "./subscriber";
 import { ConnectionInstance, RedisClientOptions, RedisResponse } from "./type";
 import { createParser } from "./utils/create-parser";
 import { encodeCommand } from "./utils/encode-command";
@@ -264,41 +264,17 @@ export class RedisClient {
     return (this.subscriberInstance ??= new Subscriber(this.options));
   }
 
-  async subscribe(
-    channel: string,
-    callback: SubscribeCallback,
-    options?: SubscribeOptions,
-  ): Promise<() => void>;
-
-  async subscribe<T extends TSchema>(
-    channel: RedisKey<T>,
-    callback: SubscribeCallback<T>,
-    options?: SubscribeOptions,
-  ): Promise<() => void>;
-
-  async subscribe(
-    channel: string | RedisKey<TAnySchema>,
-    callback: SubscribeCallback,
-    options?: SubscribeOptions,
-  ): Promise<() => void> {
-    return this.getSubscriber().subscribe(channel, callback, options);
-  }
-
-  async unsubscribe(
-    channel: string,
-    callback: SubscribeCallback,
-  ): Promise<void>;
-
-  async unsubscribe<T extends TSchema>(
-    channel: RedisKey<T>,
-    callback: SubscribeCallback<T>,
-  ): Promise<void>;
-
-  async unsubscribe(
-    channel: string | RedisKey<TAnySchema>,
-    callback: SubscribeCallback,
-  ): Promise<void> {
-    return this.getSubscriber().unsubscribe(channel, callback);
+  /**
+   * Subscribe to a channel or pattern. Returns a readable stream of
+   * `MessageEvent` objects, which can be `for await`ed.
+   *
+   * You may unsubscribe through the `ReadableStream#cancel` or
+   * `MessageEvent#cancel` methods.
+   */
+  subscribe<T extends TSchema>(
+    pattern: RedisChannel<T> | RedisChannelPattern<T>,
+  ): ReadableStream<MessageEvent<T>> {
+    return this.getSubscriber().subscribe(pattern);
   }
 
   public async close(err?: Error) {

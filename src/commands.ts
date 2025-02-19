@@ -1,4 +1,5 @@
 import { Static, TNumber, TSchema, Type } from "@sinclair/typebox";
+import { RedisChannel } from "./channel";
 import { RedisCommand, RedisValue } from "./command";
 import { RedisField, RedisKey, Value } from "./key";
 import {
@@ -136,7 +137,7 @@ export function INCRBY(key: RedisKey<TNumber>, amount: number) {
  * Publish a message to a channel.
  */
 export function PUBLISH<T extends TSchema>(
-  channel: RedisKey<T>,
+  channel: RedisChannel<T>,
   message: Value<T>,
 ) {
   return new RedisCommand<number>([
