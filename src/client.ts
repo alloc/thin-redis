@@ -273,8 +273,9 @@ export class RedisClient {
    */
   subscribe<T extends TSchema>(
     pattern: RedisChannel<T> | RedisChannelPattern<T>,
+    signal?: AbortSignal,
   ): ReadableStream<MessageEvent<T>> {
-    return this.getSubscriber().subscribe(pattern);
+    return this.getSubscriber().subscribe(pattern, signal);
   }
 
   public async close(err?: Error) {

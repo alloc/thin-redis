@@ -77,7 +77,7 @@ export class Subscriber {
     await this.client.close();
   }
 
-  subscribe(key: SubscriptionKey): ReadableStream<any> {
+  subscribe(key: SubscriptionKey, signal?: AbortSignal): ReadableStream<any> {
     let subs: SubscriptionMap;
     let command: string;
     if (key instanceof RedisChannel) {
@@ -129,6 +129,10 @@ export class Subscriber {
         }
       }
     };
+
+    signal?.addEventListener("abort", () => {
+      stream.readable.cancel(signal.reason);
+    });
 
     return stream.readable;
   }
