@@ -41,7 +41,7 @@ test("send", async () => {
   expect(await redis.sendOnce(PING())).toEqual("PONG");
 });
 
-test.only("full-text-search", async () => {
+test("full-text-search", async () => {
   const redis = new RedisClient({
     url: "redis://localhost:6379/0",
   });
@@ -52,7 +52,12 @@ test.only("full-text-search", async () => {
 
   expect(
     await redis.send(
-      FT.CREATE(idx, { field1: "TEXT" }, ON("hash"), PREFIX("doc:")),
+      FT.CREATE(
+        idx,
+        ["$..field1", "AS", "field1", "TEXT"],
+        ON("json"),
+        PREFIX("doc:"),
+      ),
     ),
     "OK",
   ).toEqual("OK");
