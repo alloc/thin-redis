@@ -1,23 +1,10 @@
-import {
-  Static,
-  TAnySchema,
-  TArray,
-  TSchema,
-  TTuple,
-  TUndefined,
-} from "@sinclair/typebox";
+import { Static, TAnySchema, TSchema, TUndefined } from "@sinclair/typebox";
 import { Encode } from "@sinclair/typebox/value";
-import { RedisValue, TRedisValue } from "./command";
-
-type TRedisArguments =
-  | TRedisValue
-  | TTuple<TRedisValue[]>
-  | TArray<TRedisValue>
-  | TUndefined;
+import { RedisValue } from "./command";
 
 export function createModifier<
   K extends string,
-  T extends TRedisArguments = TUndefined,
+  T extends TSchema = TUndefined,
 >(token: K, schema?: T): RedisModifierFunction<K, T> {
   if (schema) {
     if (schema.type === "array") {
