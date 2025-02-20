@@ -26,7 +26,7 @@ import {
  */
 export function CREATE(
   index: RedisIndexKey,
-  schema: object,
+  schema: object | string[],
   ...modifiers: Modifiers<
     [
       ON,
@@ -52,7 +52,7 @@ export function CREATE(
     index.text,
     ...encodeModifiers(modifiers),
     "SCHEMA",
-    ...Object.entries(schema).flat(),
+    ...(Array.isArray(schema) ? schema : Object.entries(schema).flat()),
   ]);
 }
 
