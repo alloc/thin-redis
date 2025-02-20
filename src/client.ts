@@ -214,11 +214,7 @@ export class RedisClient {
     const chunks: Array<string | Uint8Array> = [];
 
     for (const command of commands) {
-      const payload = encodeCommand(
-        command.map((arg) => (arg instanceof Uint8Array ? arg : String(arg))),
-      );
-
-      chunks.push(...payload);
+      encodeCommand(command, chunks);
       this.promiseQueue.push(promiseWithResolvers());
     }
 

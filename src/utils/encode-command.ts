@@ -1,22 +1,24 @@
 const CRLF = "\r\n";
 
-export function encodeCommand(args: Array<string | Uint8Array>) {
-  const toWrite: Array<string | Uint8Array> = [];
-
-  let strings = "*" + args.length + CRLF;
+export function encodeCommand(
+  args: Array<unknown>,
+  chunks: Array<string | Uint8Array>,
+) {
+  let buffer = "*" + args.length + CRLF;
 
   for (const arg of args) {
     const encoder = new TextEncoder();
 
-    if (typeof arg === "string") {
-      strings += "$" + encoder.encode(arg).byteLength + CRLF + arg + CRLF;
+    if (arg instanceof Uint8Array) {
+      chunks.push(buffer + "$" + arg.length + CRLF, arg);
+      buffer = CRLF;
     } else {
-      toWrite.push(strings + "$" + arg.length + CRLF, arg);
-      strings = CRLF;
+      const string = String(arg);
+      buffer += "$" + encoder.encode(string).byteLength + CRLF + string + CRLF;
     }
   }
 
-  toWrite.push(strings);
+  chunks.push(buffer);
 
-  return toWrite;
+  return chunks;
 }
