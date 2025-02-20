@@ -170,24 +170,24 @@ export class RedisClient {
     }
   }
 
-  public async sendOnceRaw(...command: [string, ...RedisValue[]]) {
+  public async sendOnceRaw(command: RedisCommand) {
     try {
-      return await this.sendRaw(...command);
+      return await this.sendRaw(command);
     } finally {
       await this.close();
     }
   }
 
   public async send<TResult>(command: RedisCommand<TResult>) {
-    const rawResult = stringifyResult(await this.sendRaw(...command.args));
+    const rawResult = stringifyResult(await this.sendRaw(command));
     return command.decode ? command.decode(rawResult) : (rawResult as TResult);
   }
 
-  public async sendRaw(...command: [string, ...RedisValue[]]) {
+  public async sendRaw(command: RedisCommand) {
     if (!this.connectionInstance) await this.startConnection();
 
     try {
-      return await this.unsafeSend(command);
+      return await this.unsafeSend(command.args);
     } catch (e) {
       await this.close();
 
