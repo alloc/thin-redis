@@ -135,3 +135,23 @@ It's relatively straight-forward to add more commands (see [here](https://github
   Retain the time to live associated with the key.
 - `PERSIST()`  
   Remove the time to live associated with the key.
+
+## Development
+
+To run the tests, first install [Redis Stack](https://redis.io/docs/latest/operate/oss_and_stack/install/install-stack/). If you don't use Homebrew, you need to update `redis.conf` in this repository to use the correct path to the `redisearch.so` binary.
+
+```sh
+brew install redis-stack
+```
+
+Then start the Redis server from the root directory:
+
+```sh
+redis-stack-server redis.conf
+```
+
+Then run the tests. 🥳
+
+```sh
+pnpm test
+```

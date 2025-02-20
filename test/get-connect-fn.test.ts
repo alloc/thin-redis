@@ -1,10 +1,8 @@
 import { Socket } from "@arrowood.dev/socket";
-import { doesNotReject, equal } from "node:assert";
-import { test } from "node:test";
 import { getConnectFn } from "../src";
 
-test("get-connect-fn", async () => {
-  await doesNotReject(getConnectFn);
+test("connect fn", async () => {
+  await expect(getConnectFn()).resolves.not.toThrowError();
 
   const fn = () => {
     return new Socket({
@@ -13,5 +11,5 @@ test("get-connect-fn", async () => {
     });
   };
 
-  equal(await getConnectFn(fn), fn);
+  expect(await getConnectFn(fn)).toEqual(fn);
 });
