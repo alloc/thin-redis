@@ -13,14 +13,14 @@ export class RedisClient {
   private encoder = new TextEncoder();
   private decoder = new TextDecoder();
 
+  private initialized = false;
+  private initializing: Promise<void> | null = null;
   private promiseQueue: WithResolvers<RedisResponse>[] = [];
 
   public options: RedisClientOptions;
   private connectionInstance?: ConnectionInstance;
   private subscriberInstance?: Subscriber;
   public config;
-
-  private isInitialized = false;
 
   private parser = createParser({
     onReply: (reply) => {
@@ -152,16 +152,6 @@ export class RedisClient {
     };
   }
 
-  private getInitializeCommands() {
-    const commands: [string, ...RedisValue[]][] = [];
-
-    if (this.config.password) commands.push(["AUTH", this.config.password]);
-
-    if (this.config.database) commands.push(["SELECT", this.config.database]);
-
-    return commands;
-  }
-
   public async sendOnce<TResult>(command: RedisCommand<TResult>) {
     try {
       return await this.send(command);
@@ -196,17 +186,26 @@ export class RedisClient {
   }
 
   private async unsafeSend(command: [string, ...RedisValue[]]) {
-    const commands: [string, ...RedisValue[]][] = [];
-
-    if (!this.isInitialized) {
-      commands.push(...this.getInitializeCommands());
+    if (!this.initialized) {
+      this.initialized = true;
+      if (this.config.password || this.config.database) {
+        const commands: [string, ...RedisValue[]][] = [];
+        if (this.config.password) {
+          commands.push(["AUTH", this.config.password]);
+        }
+        if (this.config.database) {
+          commands.push(["SELECT", this.config.database]);
+        }
+        this.initializing = this.writeCommandsToConnection(commands).then(
+          () => {
+            this.initializing = null;
+          },
+        );
+      }
     }
-
-    commands.push(command);
-
-    const result = await this.writeCommandsToConnection(commands);
-
-    return result.at(-1) ?? null;
+    const promise = this.writeCommandsToConnection([command]);
+    const [result] = await Promise.all([promise, this.initializing]);
+    return result[result.length - 1];
   }
 
   private async writeCommandsToConnection(
@@ -215,21 +214,17 @@ export class RedisClient {
     const chunks: Array<string | Uint8Array> = [];
 
     for (const command of commands) {
-      const { promise, resolve, reject } =
-        promiseWithResolvers<RedisResponse>();
-
-      this.promiseQueue.push({
-        promise,
-        resolve,
-        reject,
-      });
-
       const payload = encodeCommand(
         command.map((arg) => (arg instanceof Uint8Array ? arg : String(arg))),
       );
 
       chunks.push(...payload);
+      this.promiseQueue.push(promiseWithResolvers());
     }
+
+    const promises = this.promiseQueue
+      .slice(-commands.length)
+      .map((p) => p.promise);
 
     const connection = this.connectionInstance!;
 
@@ -239,7 +234,7 @@ export class RedisClient {
       );
     }
 
-    return Promise.all(this.promiseQueue.map((p) => p.promise));
+    return Promise.all(promises);
   }
 
   private async startMessageListener(connection: ConnectionInstance) {
@@ -284,7 +279,7 @@ export class RedisClient {
     const connection = this.connectionInstance;
 
     this.connectionInstance = undefined;
-    this.isInitialized = false;
+    this.initialized = false;
 
     if (!connection) return;
 
