@@ -10,7 +10,7 @@ export function createModifier<
     if (schema.type === "array") {
       return (...args: unknown[]) => {
         const encodedArgs = Encode(schema, args) as RedisValue[];
-        return new RedisModifier(token, encodedArgs);
+        return new RedisModifier(token, [encodedArgs.length, ...encodedArgs]);
       };
     }
     return (arg?: unknown) => {
