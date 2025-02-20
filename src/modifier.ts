@@ -57,11 +57,47 @@ export class RedisModifier<K extends string = string> {
 export type StaticModifier<T extends RedisModifierFunction> =
   T extends RedisModifierFunction<infer K> ? RedisModifier<K> : never;
 
-type StaticModifierArgs<T extends TSchema> =
-  Static<T> extends infer V
-    ? [V] extends [undefined]
+export type StaticModifierArgs<T extends TSchema> =
+  Static<T> extends infer TValue
+    ? [TValue] extends [undefined]
       ? []
-      : undefined extends V
-        ? [V?]
-        : [V]
+      : undefined extends TValue
+        ? [TValue?]
+        : TValue extends readonly (infer TElement)[]
+          ? TElement[]
+          : [TValue]
     : never;
+
+/**
+ * Represents a permutation of modifiers.
+ */
+export type Modifiers<TOptions extends RedisModifier[] = RedisModifier[]> = [
+  TOptions,
+] extends [RedisModifier[]]
+  ? (RedisModifier | undefined)[]
+  : TOptions extends [
+        infer First extends RedisModifier,
+        ...infer Rest extends RedisModifier[],
+      ]
+    ? Rest extends []
+      ? [First]
+      : (
+            First extends { $$required: infer Req }
+              ? true extends Req
+                ? First
+                : First | undefined
+              : First | undefined
+          ) extends infer Modifier
+        ?
+            | [Modifier, ...UndefinedElements<Rest>]
+            | [Modifier, ...Modifiers<Rest>]
+            | Modifiers<Rest>
+        : never
+    : never;
+
+/** For modifiers that affect which overload is used. */
+export type Require<T extends RedisModifier> = T & {
+  $$required?: true;
+};
+
+type UndefinedElements<T extends unknown[]> = { [K in keyof T]?: undefined };

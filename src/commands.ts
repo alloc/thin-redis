@@ -1,13 +1,14 @@
-import { Static, TNumber, TSchema, Type } from "@sinclair/typebox";
+import { Static, TNumber, TSchema } from "@sinclair/typebox";
 import { RedisChannel } from "./channel";
 import { RedisCommand, RedisValue } from "./command";
 import { RedisField, RedisKey, Value } from "./key";
-import {
-  createModifier,
-  encodeModifiers,
-  RedisModifier,
-  StaticModifier,
-} from "./modifier";
+import { encodeModifiers, Modifiers, RedisModifier, Require } from "./modifier";
+
+export * as FT from "./commands/full-text";
+export * as JSON from "./commands/json";
+
+/** Return the previous value stored at this key */
+export type GET = RedisModifier<"GET">;
 
 /** Get the value of a key */
 export function GET<T extends TSchema>(
@@ -38,6 +39,16 @@ export function KEYS(pattern: string) {
 //
 // Write commands
 //
+
+/**
+ * Remove all keys from all databases
+ *
+ * @param mode By default, `FLUSHALL` is synchronous. Use `async` to make
+ * it asynchronous.
+ */
+export function FLUSHALL(mode?: "sync" | "async") {
+  return new RedisCommand<string>(["FLUSHALL", mode?.toUpperCase() ?? "SYNC"]);
+}
 
 /**
  * Set a timeout (in seconds) on a given key. After the timeout has
@@ -345,79 +356,12 @@ export function SUNION<T extends TSchema>(...keys: RedisKey<T>[]) {
 }
 
 //
-// Modifiers
+// Miscellaneous commands
 //
 
-/** Only set this key if it doesn't already exist */
-export const NX = /* #__PURE__ */ createModifier("NX");
-export type NX = StaticModifier<typeof NX>;
-
-/** Only set this key if it already exists */
-export const XX = /* #__PURE__ */ createModifier("XX");
-export type XX = StaticModifier<typeof XX>;
-
-/** Set expiry only when the new expiry is greater than current one */
-export const GT = /* #__PURE__ */ createModifier("GT");
-export type GT = StaticModifier<typeof GT>;
-
-/** Set expiry only when the new expiry is less than current one */
-export const LT = /* #__PURE__ */ createModifier("LT");
-export type LT = StaticModifier<typeof LT>;
-
-/** Expiry in seconds */
-export const EX = /* #__PURE__ */ createModifier("EX", Type.Number());
-export type EX = StaticModifier<typeof EX>;
-
-/** Expiry at specified Unix time, in seconds */
-export const EXAT = /* #__PURE__ */ createModifier("EXAT", Type.Number());
-export type EXAT = StaticModifier<typeof EXAT>;
-
-/** Expiry in milliseconds */
-export const PX = /* #__PURE__ */ createModifier("PX", Type.Number());
-export type PX = StaticModifier<typeof PX>;
-
-/** Expiry at specified Unix time, in milliseconds */
-export const PXAT = /* #__PURE__ */ createModifier("PXAT", Type.Number());
-export type PXAT = StaticModifier<typeof PXAT>;
-
-/** Return the previous value stored at this key */
-export type GET = RedisModifier<"GET">;
-
-/** Retain the time to live associated with the key */
-export const KEEPTTL = /* #__PURE__ */ createModifier("KEEPTTL");
-export type KEEPTTL = StaticModifier<typeof KEEPTTL>;
-
-/** Remove the time to live associated with the key */
-export const PERSIST = /* #__PURE__ */ createModifier("PERSIST");
-export type PERSIST = StaticModifier<typeof PERSIST>;
-
-type Modifiers<TOptions extends RedisModifier[] = RedisModifier[]> = [
-  TOptions,
-] extends [RedisModifier[]]
-  ? (RedisModifier | undefined)[]
-  : TOptions extends [
-        infer First extends RedisModifier,
-        ...infer Rest extends RedisModifier[],
-      ]
-    ? Rest extends []
-      ? [First]
-      : (
-            First extends { $$required: infer Req }
-              ? true extends Req
-                ? First
-                : First | undefined
-              : First | undefined
-          ) extends infer Modifier
-        ?
-            | [Modifier, ...UndefinedElements<Rest>]
-            | [Modifier, ...Modifiers<Rest>]
-            | Modifiers<Rest>
-        : never
-    : never;
-
-/** For modifiers that affect which overload is used. */
-type Require<T extends RedisModifier> = T & {
-  $$required?: true;
-};
-
-type UndefinedElements<T extends unknown[]> = { [K in keyof T]?: undefined };
+/**
+ * Ping the server
+ */
+export function PING(message?: string) {
+  return new RedisCommand<string>(message ? ["PING", message] : ["PING"]);
+}

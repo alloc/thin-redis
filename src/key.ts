@@ -1,11 +1,4 @@
-import {
-  Static,
-  TAnySchema,
-  TObject,
-  TRecord,
-  TSchema,
-  TString,
-} from "@sinclair/typebox";
+import { Static, TAnySchema, TSchema } from "@sinclair/typebox";
 import { Decode, Encode } from "@sinclair/typebox/value";
 import { RedisValue } from "./command";
 import { RedisTransform } from "./transform";
@@ -81,4 +74,7 @@ export class RedisKey<
   }
 }
 
-export type TRedisHashMap = TObject | TRecord<TString, TSchema>;
+export class RedisIndexKey {
+  declare $$typeof: "RedisIndexKey";
+  constructor(readonly text: string) {}
+}
