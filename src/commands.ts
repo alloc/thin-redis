@@ -3,6 +3,18 @@ import { RedisChannel } from "./channel";
 import { RedisCommand, RedisValue } from "./command";
 import { RedisField, RedisKey, Value } from "./key";
 import { encodeModifiers, Modifiers, RedisModifier, Require } from "./modifier";
+import {
+  EX,
+  EXAT,
+  GT,
+  KEEPTTL,
+  LT,
+  NX,
+  PERSIST,
+  PX,
+  PXAT,
+  XX,
+} from "./modifiers";
 
 export * as FT from "./commands/full-text";
 export * as JSON from "./commands/json";

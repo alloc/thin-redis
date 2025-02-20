@@ -19,10 +19,10 @@ export function createModifier<
         return new RedisModifier(token, [encodedArgs.length, ...encodedArgs]);
       };
     }
-    return (arg?: unknown) => {
+    return ((arg?: unknown) => {
       const encodedArg = Encode(schema, arg) as RedisValue;
       return new RedisModifier(token, [encodedArg]);
-    };
+    }) as RedisModifierFunction<K, any>;
   }
   const modifier = new RedisModifier(token);
   return () => modifier;

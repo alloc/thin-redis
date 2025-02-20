@@ -1,7 +1,7 @@
 import { TAnySchema, TSchema } from "@sinclair/typebox";
 import { RedisChannel, RedisChannelPattern } from "./channel";
 import { RedisClient } from "./client";
-import { RedisValue } from "./command";
+import { RedisCommand, RedisValue } from "./command";
 import { Value } from "./key";
 import { RedisClientOptions } from "./type";
 import { stringifyResult } from "./utils/stringify-result";
@@ -94,9 +94,11 @@ export class Subscriber {
     if (!state) {
       state = {
         streams: new Map(),
-        subscribePromise: this.client.sendRaw(command, key.text).then(() => {
-          state!.subscribePromise = null;
-        }),
+        subscribePromise: this.client
+          .sendRaw(new RedisCommand([command, key.text]))
+          .then(() => {
+            state!.subscribePromise = null;
+          }),
       };
       subs.set(key.text, state);
     }
@@ -123,8 +125,10 @@ export class Subscriber {
           await self.close();
         } else {
           await self.client.sendRaw(
-            key instanceof RedisChannel ? "UNSUBSCRIBE" : "PUNSUBSCRIBE",
-            key.text,
+            new RedisCommand([
+              key instanceof RedisChannel ? "UNSUBSCRIBE" : "PUNSUBSCRIBE",
+              key.text,
+            ]),
           );
         }
       }
