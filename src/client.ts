@@ -6,7 +6,6 @@ import { ConnectionInstance, RedisClientOptions, RedisResponse } from "./type";
 import { createParser } from "./utils/create-parser";
 import { encodeCommand } from "./utils/encode-command";
 import { getConnectFn } from "./utils/get-connect-fn";
-import { stringifyResult } from "./utils/stringify-result";
 
 export class RedisClient {
   #encoder = new TextEncoder();
@@ -182,7 +181,15 @@ export class RedisClient {
     return this.#connection;
   }
 
-  public async sendOnce<TResult>(command: RedisCommand<TResult>) {
+  public async sendOnce<TResult>(
+    command: RedisCommand<TResult>,
+  ): Promise<TResult>;
+
+  public async sendOnce<const TResults extends any[]>(commands: {
+    [I in keyof TResults]: RedisCommand<TResults[I]>;
+  }): Promise<TResults>;
+
+  public async sendOnce(command: RedisCommand | RedisCommand[]) {
     try {
       return await this.send(command);
     } finally {
@@ -190,7 +197,11 @@ export class RedisClient {
     }
   }
 
-  public async sendOnceRaw(command: RedisCommand) {
+  public async sendOnceRaw(command: RedisCommand): Promise<RedisResponse>;
+
+  public async sendOnceRaw(commands: RedisCommand[]): Promise<RedisResponse[]>;
+
+  public async sendOnceRaw(command: RedisCommand | RedisCommand[]) {
     try {
       return await this.sendRaw(command);
     } finally {
@@ -198,22 +209,49 @@ export class RedisClient {
     }
   }
 
-  public async send<TResult>(command: RedisCommand<TResult>) {
-    const rawResult = stringifyResult(await this.sendRaw(command));
-    return command.decode ? command.decode(rawResult) : (rawResult as TResult);
+  public async send<TResult>(command: RedisCommand<TResult>): Promise<TResult>;
+
+  public async send<const TResults extends any[]>(commands: {
+    [I in keyof TResults]: RedisCommand<TResults[I]>;
+  }): Promise<TResults>;
+
+  public async send(command: RedisCommand | RedisCommand[]): Promise<any>;
+
+  public async send(command: RedisCommand | RedisCommand[]) {
+    if (Array.isArray(command)) {
+      const rawResults = await this.sendRaw(command);
+      return command.map(({ decode }, index) => {
+        return decode ? decode(rawResults[index]) : rawResults[index];
+      });
+    }
+    const rawResult = await this.sendRaw(command);
+    return command.decode ? command.decode(rawResult) : rawResult;
   }
 
-  public async sendRaw(command: RedisCommand) {
+  public async sendRaw(command: RedisCommand): Promise<RedisResponse>;
+
+  public async sendRaw(command: RedisCommand[]): Promise<RedisResponse[]>;
+
+  public async sendRaw(command: RedisCommand | RedisCommand[]): Promise<any>;
+
+  public async sendRaw(command: RedisCommand | RedisCommand[]) {
     const connection = await this.connect();
 
-    let promise: Promise<RedisResponse>;
+    let promises: Promise<RedisResponse>[];
 
     // Use a write lock to avoid out-of-order command execution.
     await (this.#writeLock = this.#writeLock.then(async () => {
-      [promise] = await this.writeCommands([command.args], connection.writer);
+      promises = await this.writeCommands(
+        Array.isArray(command) ? command.map((c) => c.args) : [command.args],
+        connection.writer,
+      );
     }));
 
-    return await promise!;
+    const results = await Promise.all(promises!);
+    if (Array.isArray(command)) {
+      return results;
+    }
+    return results[0];
   }
 
   private async writeCommands(
