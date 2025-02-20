@@ -54,8 +54,10 @@ export class Subscriber {
       onReply: (reply) => {
         const decodedReply = stringifyResult(reply);
         if (!Array.isArray(decodedReply)) {
+          console.log("subscriber received not an array:", decodedReply);
           return false;
         }
+        console.log("subscriber received '%s' event", decodedReply[0]);
         switch (decodedReply[0]) {
           case "message": {
             const [, channel, payload] = decodedReply as MessageReply;
