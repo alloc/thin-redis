@@ -16,6 +16,7 @@ export class RedisClient {
   private initialized = false;
   private initializing: Promise<void> | null = null;
   private promiseQueue: WithResolvers<RedisResponse>[] = [];
+  private writing: Promise<void> | null = null;
 
   public options: RedisClientOptions;
   private connectionInstance?: ConnectionInstance;
@@ -218,19 +219,18 @@ export class RedisClient {
       this.promiseQueue.push(promiseWithResolvers());
     }
 
-    const promises = this.promiseQueue
-      .slice(-commands.length)
-      .map((p) => p.promise);
+    this.writing = (this.writing ?? Promise.resolve()).then(async () => {
+      const { writer } = this.connectionInstance!;
+      for (const chunk of chunks) {
+        await writer.write(
+          chunk instanceof Uint8Array ? chunk : this.encoder.encode(chunk),
+        );
+      }
+    });
 
-    const connection = this.connectionInstance!;
-
-    for (const chunk of chunks) {
-      await connection.writer.write(
-        chunk instanceof Uint8Array ? chunk : this.encoder.encode(chunk),
-      );
-    }
-
-    return Promise.all(promises);
+    return Promise.all(
+      this.promiseQueue.slice(-commands.length).map((p) => p.promise),
+    );
   }
 
   private async startMessageListener(connection: ConnectionInstance) {
