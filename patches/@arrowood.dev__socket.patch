@@ -1,0 +1,132 @@
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 42c8f4ed7e8ac7df7a2f77ebf929b91b9eecd173..e2d14d7eb2fe4b92ac9244a9da5bd47121eb2211 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -2,15 +2,19 @@
+ /// <reference types="node" />
+ import net from 'node:net';
+ import type { ReadableStream, WritableStream } from 'node:stream/web';
+-import type { SocketAddress, SocketOptions } from './types';
++import type { SocketAddress, SocketInfo, SocketOptions } from './types';
+ export declare function connect(address: SocketAddress | string, options?: SocketOptions): Socket;
+ export declare class Socket {
+     readable: ReadableStream<unknown>;
+     writable: WritableStream<unknown>;
++    opened: Promise<SocketInfo>;
+     closed: Promise<void>;
+     private socket;
+     private allowHalfOpen;
+     private secureTransport;
++    private openedIsResolved;
++    private openedResolve;
++    private openedReject;
+     private closedResolve;
+     private closedReject;
+     private startTlsCalled;
+diff --git a/dist/index.d.ts.map b/dist/index.d.ts.map
+index 673bdc7f8c1bad42a3425b24ae339b274699bb7e..d0ace2e92de9a14cb63ec0496fec6bdbc2a76a7b 100644
+--- a/dist/index.d.ts.map
++++ b/dist/index.d.ts.map
+@@ -1 +1 @@
+-{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../src/index.ts"],"names":[],"mappings":";;AAAA,OAAO,GAAG,MAAM,UAAU,CAAC;AAG3B,OAAO,KAAK,EAAE,cAAc,EAAE,cAAc,EAAE,MAAM,iBAAiB,CAAC;AACtE,OAAO,KAAK,EAAE,aAAa,EAAE,aAAa,EAAE,MAAM,SAAS,CAAC;AAG5D,wBAAgB,OAAO,CACrB,OAAO,EAAE,aAAa,GAAG,MAAM,EAC/B,OAAO,CAAC,EAAE,aAAa,GACtB,MAAM,CAUR;AAED,qBAAa,MAAM;IACjB,QAAQ,EAAE,cAAc,CAAC,OAAO,CAAC,CAAC;IAClC,QAAQ,EAAE,cAAc,CAAC,OAAO,CAAC,CAAC;IAClC,MAAM,EAAE,OAAO,CAAC,IAAI,CAAC,CAAC;IAEtB,OAAO,CAAC,MAAM,CAA6B;IAC3C,OAAO,CAAC,aAAa,CAAU;IAC/B,OAAO,CAAC,eAAe,CAAmC;IAC1D,OAAO,CAAC,aAAa,CAAc;IACnC,OAAO,CAAC,YAAY,CAA8B;IAClD,OAAO,CAAC,cAAc,CAAS;gBAG7B,eAAe,EAAE,aAAa,GAAG,GAAG,CAAC,MAAM,EAC3C,OAAO,CAAC,EAAE,aAAa;IAqDzB,KAAK,IAAI,OAAO,CAAC,IAAI,CAAC;IAOtB,QAAQ,IAAI,MAAM;CAYnB;AAED,qBAAa,WAAY,SAAQ,SAAS;gBAC5B,OAAO,EAAE,MAAM;CAG5B;AAED,mBAAmB,SAAS,CAAC"}
+\ No newline at end of file
++{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../src/index.ts"],"names":[],"mappings":";;AAAA,OAAO,GAAG,MAAM,UAAU,CAAC;AAG3B,OAAO,KAAK,EAAE,cAAc,EAAE,cAAc,EAAE,MAAM,iBAAiB,CAAC;AACtE,OAAO,KAAK,EAAE,aAAa,EAAE,UAAU,EAAE,aAAa,EAAE,MAAM,SAAS,CAAC;AAGxE,wBAAgB,OAAO,CACrB,OAAO,EAAE,aAAa,GAAG,MAAM,EAC/B,OAAO,CAAC,EAAE,aAAa,GACtB,MAAM,CAUR;AAED,qBAAa,MAAM;IACjB,QAAQ,EAAE,cAAc,CAAC,OAAO,CAAC,CAAC;IAClC,QAAQ,EAAE,cAAc,CAAC,OAAO,CAAC,CAAC;IAClC,MAAM,EAAE,OAAO,CAAC,UAAU,CAAC,CAAC;IAC5B,MAAM,EAAE,OAAO,CAAC,IAAI,CAAC,CAAC;IAEtB,OAAO,CAAC,MAAM,CAA6B;IAC3C,OAAO,CAAC,aAAa,CAAU;IAC/B,OAAO,CAAC,eAAe,CAAmC;IAC1D,OAAO,CAAC,gBAAgB,CAAU;IAClC,OAAO,CAAC,aAAa,CAA8B;IACnD,OAAO,CAAC,YAAY,CAA8B;IAClD,OAAO,CAAC,aAAa,CAAc;IACnC,OAAO,CAAC,YAAY,CAA8B;IAClD,OAAO,CAAC,cAAc,CAAS;gBAG7B,eAAe,EAAE,aAAa,GAAG,GAAG,CAAC,MAAM,EAC3C,OAAO,CAAC,EAAE,aAAa;IAoFzB,KAAK,IAAI,OAAO,CAAC,IAAI,CAAC;IAOtB,QAAQ,IAAI,MAAM;CAYnB;AAED,qBAAa,WAAY,SAAQ,SAAS;gBAC5B,OAAO,EAAE,MAAM;CAG5B;AAED,mBAAmB,SAAS,CAAC"}
+\ No newline at end of file
+diff --git a/dist/index.js b/dist/index.js
+index a5a3c4b493cb58f192b8dbf6299158dd3a9e433d..4b7f7a521551b360df25528d507952b7c977c2c6 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -23,16 +23,32 @@ exports.connect = connect;
+ class Socket {
+     readable;
+     writable;
++    opened;
+     closed;
+     socket;
+     allowHalfOpen;
+     secureTransport;
++    openedIsResolved;
++    openedResolve;
++    openedReject;
+     closedResolve;
+     closedReject;
+     startTlsCalled = false;
+     constructor(addressOrSocket, options) {
+         this.secureTransport = options?.secureTransport ?? 'off';
+         this.allowHalfOpen = options?.allowHalfOpen ?? true;
++        this.openedIsResolved = false;
++        this.opened = new Promise((resolve, reject) => {
++            this.openedResolve = (info) => {
++                this.openedIsResolved = true;
++                resolve(info);
++            };
++            this.openedReject = (...args) => {
++                this.openedIsResolved = true;
++                // eslint-disable-next-line prefer-promise-reject-errors -- ESLint gets this wrong as we are completely forwarding the arguments to reject.
++                reject(...args);
++            };
++        });
+         this.closed = new Promise((resolve, reject) => {
+             this.closedResolve = (...args) => {
+                 resolve(...args);
+@@ -58,18 +74,33 @@ class Socket {
+         else {
+             this.socket = new node_tls_1.default.TLSSocket(addressOrSocket);
+         }
++        if (this.socket instanceof node_tls_1.default.TLSSocket) {
++            this.socket.on('secureConnect', () => {
++                this.openedResolve({
++                    remoteAddress: this.socket.remoteAddress,
++                    localAddress: this.socket.localAddress,
++                });
++            });
++        }
++        else {
++            this.socket.on('connect', () => {
++                this.openedResolve({
++                    remoteAddress: this.socket.remoteAddress,
++                    localAddress: this.socket.localAddress,
++                });
++            });
++        }
+         this.socket.on('close', (hadError) => {
+             if (!hadError) {
+                 this.closedResolve();
+             }
+         });
+         this.socket.on('error', (err) => {
+-            if (err instanceof Error) {
+-                this.closedReject(new SocketError(err.message));
+-            }
+-            else {
+-                this.closedReject(new SocketError(err));
++            const socketError = new SocketError(err instanceof Error ? err.message : err);
++            if (!this.openedIsResolved) {
++                this.openedReject(socketError);
+             }
++            this.closedReject(socketError);
+         });
+         // types are wrong. fixed based on docs https://nodejs.org/dist/latest/docs/api/stream.html#streamduplextowebstreamduplex
+         const { readable, writable } = node_stream_1.Duplex.toWeb(this.socket);
+diff --git a/dist/types.d.ts b/dist/types.d.ts
+index 1eeebaa79c65d83dd741b4dd84a77506bdc3a4aa..6adc6fc9411a094a54e7c03a76a2c72e4fc15678 100644
+--- a/dist/types.d.ts
++++ b/dist/types.d.ts
+@@ -20,4 +20,8 @@ export interface SocketAddress {
+     /** The port number to connect to. Example: `5432`. */
+     port: number;
+ }
++export interface SocketInfo {
++    remoteAddress?: string;
++    localAddress?: string;
++}
+ //# sourceMappingURL=types.d.ts.map
+\ No newline at end of file
+diff --git a/dist/types.d.ts.map b/dist/types.d.ts.map
+index c5b4672af71190b6b2ae41d4300be42e92195efd..3bf94e61b8ab10454ed8588b079faf79323bc348 100644
+--- a/dist/types.d.ts.map
++++ b/dist/types.d.ts.map
+@@ -1 +1 @@
+-{"version":3,"file":"types.d.ts","sourceRoot":"","sources":["../src/types.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,aAAa;IAC5B;;;;;OAKG;IACH,eAAe,CAAC,EAAE,KAAK,GAAG,IAAI,GAAG,UAAU,CAAC;IAC5C;;;;;OAKG;IACH,aAAa,CAAC,EAAE,OAAO,CAAC;CACzB;AAED,MAAM,WAAW,aAAa;IAC5B,yDAAyD;IACzD,QAAQ,EAAE,MAAM,CAAC;IACjB,sDAAsD;IACtD,IAAI,EAAE,MAAM,CAAC;CACd"}
+\ No newline at end of file
++{"version":3,"file":"types.d.ts","sourceRoot":"","sources":["../src/types.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,aAAa;IAC5B;;;;;OAKG;IACH,eAAe,CAAC,EAAE,KAAK,GAAG,IAAI,GAAG,UAAU,CAAC;IAC5C;;;;;OAKG;IACH,aAAa,CAAC,EAAE,OAAO,CAAC;CACzB;AAED,MAAM,WAAW,aAAa;IAC5B,yDAAyD;IACzD,QAAQ,EAAE,MAAM,CAAC;IACjB,sDAAsD;IACtD,IAAI,EAAE,MAAM,CAAC;CACd;AAED,MAAM,WAAW,UAAU;IACzB,aAAa,CAAC,EAAE,MAAM,CAAC;IACvB,YAAY,CAAC,EAAE,MAAM,CAAC;CACvB"}
