@@ -7,6 +7,8 @@ import { createParser } from "./utils/create-parser";
 import { encodeCommand } from "./utils/encode-command";
 import { getConnectFn } from "./utils/get-connect-fn";
 
+type MaybeArray<T> = T | readonly T[];
+
 export class RedisClient {
   #encoder = new TextEncoder();
   #decoder = new TextDecoder();
@@ -281,7 +283,7 @@ export class RedisClient {
    * `MessageEvent#cancel` methods.
    */
   subscribe<T extends TSchema>(
-    pattern: RedisChannel<T> | RedisChannelPattern<T>,
+    pattern: MaybeArray<RedisChannel<T> | RedisChannelPattern<T>>,
     signal?: AbortSignal,
   ): ReadableStream<MessageEvent<T>> {
     const subscriber = (this.#subscriber ??= new Subscriber(this.options));
