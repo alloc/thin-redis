@@ -85,7 +85,9 @@ export class Subscriber {
     const stream = new TransformStream();
     const writer = stream.writable.getWriter();
 
-    for (const key of castArray(keys)) {
+    keys = castArray(keys);
+
+    for (const key of keys) {
       let subs: SubscriptionMap;
       let command: string;
       if (key instanceof RedisChannel) {
@@ -128,7 +130,7 @@ export class Subscriber {
         cancelling = this.cancel(reason);
       }
 
-      for (const key of castArray(keys)) {
+      for (const key of keys) {
         let subs: SubscriptionMap;
         let command: string;
         if (key instanceof RedisChannel) {
