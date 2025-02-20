@@ -1,4 +1,10 @@
-import { Static, TAnySchema, TSchema, TUndefined } from "@sinclair/typebox";
+import {
+  Static,
+  TAnySchema,
+  TSchema,
+  TTuple,
+  TUndefined,
+} from "@sinclair/typebox";
 import { Encode } from "@sinclair/typebox/value";
 import { RedisValue } from "./command";
 
@@ -57,16 +63,20 @@ export class RedisModifier<K extends string = string> {
 export type StaticModifier<T extends RedisModifierFunction> =
   T extends RedisModifierFunction<infer K> ? RedisModifier<K> : never;
 
-export type StaticModifierArgs<T extends TSchema> =
-  Static<T> extends infer TValue
-    ? [TValue] extends [undefined]
-      ? []
-      : undefined extends TValue
-        ? [TValue?]
-        : TValue extends readonly (infer TElement)[]
-          ? TElement[]
-          : [TValue]
-    : never;
+// Assumes that Type.Array() and Type.Tuple() schemas are intended to be
+// used as spread arguments.
+export type StaticModifierArgs<T extends TSchema> = //
+  [T] extends [TTuple<infer TElements>]
+    ? { [K in keyof TElements]: Static<TElements[K]> }
+    : Static<T> extends infer TValue
+      ? [TValue] extends [undefined]
+        ? []
+        : [TValue] extends [readonly any[]]
+          ? TValue
+          : undefined extends TValue
+            ? [TValue?]
+            : [TValue]
+      : never;
 
 /**
  * Represents a permutation of modifiers.

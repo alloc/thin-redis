@@ -1,4 +1,4 @@
-import { Type } from "@sinclair/typebox";
+import { TNumber, Type } from "@sinclair/typebox";
 import { createModifier, StaticModifier } from "./modifier";
 
 /** Only set this key if it doesn't already exist */
@@ -248,7 +248,10 @@ export type SORTBY = StaticModifier<typeof SORTBY>;
 /** When performing a FT.SEARCH query, limit the number of results returned. */
 export const LIMIT = /* #__PURE__ */ createModifier(
   "LIMIT",
-  Type.Tuple([Type.Number(), Type.Number()]),
+  Type.Tuple([Type.Number(), Type.Number()] as [
+    offset: TNumber,
+    count: TNumber,
+  ]),
 );
 export type LIMIT = StaticModifier<typeof LIMIT>;
 
