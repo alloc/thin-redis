@@ -9,7 +9,7 @@ This package is designed to work with Cloudflare Workers, but it can also be use
 >
 > - Modular commands and key types for tree-shakeable type safety.
 > - Integrated with `@sinclair/typebox` for static type-checking and runtime validation.
-> - **Experimental:** Supports pub-sub with dedicated `Subscriber` class.
+> - Supports pub-sub with `subscribe` method, including pattern matching, keyspace notifications, and keyevent notifications.
 
 ## Installation
 
