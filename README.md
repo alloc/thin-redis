@@ -82,7 +82,6 @@ Or you can start connection immediately by using `redis.startConnection()`.
 
 - `url` (string): The URL of the Redis server.
 - `tls` (boolean): Whether to use TLS. Default: `false`.
-- `logger` (function): A function to log debug messages.
 - `connectFn` (function): Polyfill for `cloudflare:sockets`'s `connect` function if you're using it in node.js. Default: `undefined`.
 - `onReply` (function): Callback for Redis replies. Default: `undefined`.
 

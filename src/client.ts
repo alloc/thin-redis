@@ -26,26 +26,12 @@ export class RedisClient {
 
   private parser = createParser({
     onReply: (reply) => {
-      const logger = this.logger;
-
-      if (logger)
-        logger?.(
-          "Received reply",
-          reply instanceof Uint8Array
-            ? this.#decoder.decode(reply)
-            : String(reply),
-        );
-
       if (this.options.onReply?.(reply)) {
         return;
       }
-
       this.#responseQueue.shift()?.resolve(reply);
     },
     onError: (err) => {
-      if (this.logger)
-        this.logger("Error", err.message, err.stack ?? "No stack");
-
       this.#responseQueue.shift()?.reject(err);
     },
   });
@@ -57,10 +43,6 @@ export class RedisClient {
 
   public get connected() {
     return this.#connected;
-  }
-
-  public get logger() {
-    return this.options.logger;
   }
 
   public get tls() {
@@ -108,12 +90,6 @@ export class RedisClient {
 
     this.#connection = (async () => {
       const connect = await getConnectFn(this.options.connectFn);
-
-      this.options.logger?.(
-        "Connecting to",
-        this.config.hostname,
-        this.config.port.toString(),
-      );
 
       const socket = connect(
         {
@@ -164,7 +140,6 @@ export class RedisClient {
             connection.reader.read(),
           ]);
           if (!result) {
-            this.logger?.("Socket closed while reading");
             break;
           }
           if (result.value) {
@@ -175,7 +150,6 @@ export class RedisClient {
           }
         }
       } finally {
-        this.logger?.("Listener closed");
         await this.close();
       }
     });
@@ -291,7 +265,6 @@ export class RedisClient {
   }
 
   public async close(err?: Error) {
-    if (err) this.logger?.(`Closing socket due to error: ${err.message}`);
     if (!this.#connection) return;
 
     const connection = await this.#connection;

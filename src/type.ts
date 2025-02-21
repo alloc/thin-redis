@@ -23,7 +23,6 @@ export type RedisConnectionOptions =
 
 export type RedisClientOptions = {
   tls?: boolean;
-  logger?: (...message: string[]) => void;
   connectFn?: typeof connect | typeof nodeConnect;
   onReply?: (reply: RedisResponse) => boolean;
 } & RedisConnectionOptions;
