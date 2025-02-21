@@ -6,6 +6,7 @@ import { ConnectionInstance, RedisClientOptions, RedisResponse } from "./type";
 import { createParser } from "./utils/create-parser";
 import { encodeCommand } from "./utils/encode-command";
 import { getConnectFn } from "./utils/get-connect-fn";
+import { stringifyResult } from "./utils/stringify-result";
 
 type MaybeArray<T> = T | readonly T[];
 
@@ -197,11 +198,14 @@ export class RedisClient {
     if (Array.isArray(command)) {
       const rawResults = await this.sendRaw(command);
       return command.map(({ decode }, index) => {
-        return decode ? decode(rawResults[index]) : rawResults[index];
+        const rawResult = rawResults[index];
+        const result = stringifyResult(rawResult);
+        return decode ? decode(result) : result;
       });
     }
     const rawResult = await this.sendRaw(command);
-    return command.decode ? command.decode(rawResult) : rawResult;
+    const result = stringifyResult(rawResult);
+    return command.decode ? command.decode(result) : result;
   }
 
   public async sendRaw(command: RedisCommand): Promise<RedisResponse>;
