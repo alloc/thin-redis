@@ -1,4 +1,5 @@
 import { TSchema } from "@sinclair/typebox";
+import { castArrayIfExists } from "radashi";
 import { RedisChannel, RedisChannelPattern } from "./channel";
 import { RedisCommand, RedisValue } from "./command";
 import { MessageEvent, Subscriber } from "./subscriber";
@@ -140,7 +141,8 @@ export class RedisClient {
       this.#connection = this.#connection.then(async (connection) => {
         const commands: [string, ...RedisValue[]][] = [];
         if (this.config.password) {
-          commands.push(["AUTH", this.config.password]);
+          const username = castArrayIfExists(this.config.username) ?? [];
+          commands.push(["AUTH", ...username, this.config.password]);
         }
         if (this.config.database) {
           commands.push(["SELECT", this.config.database]);
