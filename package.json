@@ -1,6 +1,6 @@
 {
   "name": "@alloc/redis-on-workers",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Connect to your Redis server using cloudflare:sockets",
   "scripts": {
     "build": "tsup",
