@@ -112,26 +112,6 @@ export class RedisClient {
       };
     })();
 
-    if (this.config.password || this.config.database) {
-      // AUTH and SELECT block all other commands until they are resolved.
-      this.#connection = this.#connection.then(async (connection) => {
-        const commands: [string, ...RedisValue[]][] = [];
-        if (this.config.password) {
-          commands.push(["AUTH", this.config.password]);
-        }
-        if (this.config.database) {
-          commands.push(["SELECT", this.config.database]);
-        }
-
-        // Wait for writing to finish...
-        const promises = await this.writeCommands(commands, connection.writer);
-        // Then wait for all commands to finish...
-        await Promise.all(promises);
-
-        return connection;
-      });
-    }
-
     // Listen for socket close events and parse responses.
     this.#connection.then(async (connection) => {
       try {
@@ -154,6 +134,26 @@ export class RedisClient {
         await this.close();
       }
     });
+
+    if (this.config.password || this.config.database) {
+      // AUTH and SELECT block all other commands until they are resolved.
+      this.#connection = this.#connection.then(async (connection) => {
+        const commands: [string, ...RedisValue[]][] = [];
+        if (this.config.password) {
+          commands.push(["AUTH", this.config.password]);
+        }
+        if (this.config.database) {
+          commands.push(["SELECT", this.config.database]);
+        }
+
+        // Wait for writing to finish...
+        const promises = await this.writeCommands(commands, connection.writer);
+        // Then wait for all commands to finish...
+        await Promise.all(promises);
+
+        return connection;
+      });
+    }
 
     return this.#connection;
   }
