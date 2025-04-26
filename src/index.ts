@@ -5,4 +5,3 @@ export * from "./commands";
 export * from "./key";
 export * from "./modifiers";
 export * from "./subscriber";
-export * from "./utils/get-connect-fn";

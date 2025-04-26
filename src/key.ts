@@ -15,6 +15,9 @@ export type Value<T extends TSchema | Record<string, TSchema>> =
 export type RedisField<T extends TSchema | Record<string, TSchema>> =
   T extends TSchema ? never : string & keyof T;
 
+/**
+ * A Redis key that points to a primitive value or a hash map.
+ */
 export class RedisKey<
   T extends TSchema | Record<string, TSchema> =
     | TAnySchema
