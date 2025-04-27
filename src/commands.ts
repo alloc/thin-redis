@@ -4,6 +4,7 @@ export * from "./commands/hash";
 export * from "./commands/pubsub";
 export * from "./commands/read";
 export * from "./commands/set";
+export * from "./commands/stream";
 export * from "./commands/write";
 
 export * as FT from "./commands/full-text";

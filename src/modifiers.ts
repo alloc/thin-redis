@@ -1,4 +1,4 @@
-import { TNumber, Type } from "@sinclair/typebox";
+import { TNumber, TSchema, Type } from "@sinclair/typebox";
 import { createModifier, StaticModifier } from "./modifier";
 
 /** Only set this key if it doesn't already exist */
@@ -266,3 +266,38 @@ export type PARAMS = StaticModifier<typeof PARAMS>;
 /** When performing a FT.SEARCH query, select the dialect version under which to execute the query. */
 export const DIALECT = /* #__PURE__ */ createModifier("DIALECT", Type.Number());
 export type DIALECT = StaticModifier<typeof DIALECT>;
+
+//
+// Stream Modifiers
+//
+
+/** Do not create the stream if it does not already exist. */
+export const NOMKSTREAM = /* #__PURE__ */ createModifier("NOMKSTREAM");
+export type NOMKSTREAM = StaticModifier<typeof NOMKSTREAM>;
+
+const StreamTrimArgs = (Threshold: TSchema) =>
+  Type.Union([
+    Type.Tuple([Threshold]),
+    Type.Tuple([Threshold, Type.Literal("LIMIT"), Type.Number()]),
+    Type.Tuple([Type.Union([Type.Literal("~"), Type.Literal("=")]), Threshold]),
+    Type.Tuple([
+      Type.Union([Type.Literal("~"), Type.Literal("=")]),
+      Threshold,
+      Type.Literal("LIMIT"),
+      Type.Number(),
+    ]),
+  ]);
+
+/** Trim the stream based on the maximum number of entries. */
+export const MAXLEN = /* #__PURE__ */ createModifier(
+  "MAXLEN",
+  StreamTrimArgs(Type.Number()),
+);
+export type MAXLEN = StaticModifier<typeof MAXLEN>;
+
+/** Trim the stream based on the minimum entry ID. */
+export const MINID = /* #__PURE__ */ createModifier(
+  "MINID",
+  StreamTrimArgs(Type.String()),
+);
+export type MINID = StaticModifier<typeof MINID>;
