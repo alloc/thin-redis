@@ -72,3 +72,11 @@ export class RedisStream<
     return Encode(this.valueSchema, value);
   }
 }
+
+export class RedisConsumerGroup {
+  declare $$typeof: "RedisConsumerGroup";
+  constructor(
+    readonly stream: RedisStream,
+    readonly name: string,
+  ) {}
+}

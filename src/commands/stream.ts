@@ -5,6 +5,8 @@ import { encodeModifiers, Modifiers, Require } from "../modifier";
 import { MAXLEN, MINID, NOMKSTREAM } from "../modifiers";
 import { RedisStream } from "../stream";
 
+export * as XGROUP from "./stream/xgroup";
+
 /**
  * Appends the specified stream entry to the stream at the specified key.
  * If the key does not exist, it is created.

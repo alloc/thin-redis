@@ -301,3 +301,23 @@ export const MINID = /* #__PURE__ */ createModifier(
   StreamTrimArgs(Type.String()),
 );
 export type MINID = StaticModifier<typeof MINID>;
+
+/** Create the stream if it doesn't exist (used with XGROUP CREATE). */
+export const MKSTREAM = /* #__PURE__ */ createModifier("MKSTREAM");
+export type MKSTREAM = StaticModifier<typeof MKSTREAM>;
+
+/**
+ * Allows for consumer group "lag tracking".
+ *
+ * Takes an arbitrary ID (any ID that isn't the ID of the stream's first
+ * entry, last entry, or zero `0-0` ID). Use it to find out how many
+ * entries are between the arbitrary ID (excluding it) and the stream's
+ * last entry.
+ *
+ * Added in Redis 7.0.0.
+ */
+export const ENTRIESREAD = /* #__PURE__ */ createModifier(
+  "ENTRIESREAD",
+  Type.String(),
+);
+export type ENTRIESREAD = StaticModifier<typeof ENTRIESREAD>;
