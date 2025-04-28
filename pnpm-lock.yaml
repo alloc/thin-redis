@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   '@arrowood.dev/socket':
-    hash: bbe6963f89e1d3657233b7d96e2c5fd06b6850f912bd68676d5245fd862be9f4
+    hash: 2mhfhygamxuwpzogewasfihepe
     path: patches/@arrowood.dev__socket.patch
 
 importers:
@@ -15,7 +15,7 @@ importers:
     devDependencies:
       '@arrowood.dev/socket':
         specifier: 0.2.0
-        version: 0.2.0(patch_hash=bbe6963f89e1d3657233b7d96e2c5fd06b6850f912bd68676d5245fd862be9f4)
+        version: 0.2.0(patch_hash=2mhfhygamxuwpzogewasfihepe)
       '@cloudflare/workers-types':
         specifier: ^4.20241011.0
         version: 4.20241011.0
@@ -1198,7 +1198,7 @@ packages:
 
 snapshots:
 
-  '@arrowood.dev/socket@0.2.0(patch_hash=bbe6963f89e1d3657233b7d96e2c5fd06b6850f912bd68676d5245fd862be9f4)': {}
+  '@arrowood.dev/socket@0.2.0(patch_hash=2mhfhygamxuwpzogewasfihepe)': {}
 
   '@cloudflare/workers-types@4.20241011.0': {}
 
