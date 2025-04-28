@@ -48,3 +48,16 @@ export function XADD(
     ...stream.encodeEntries(entries),
   ]);
 }
+
+/**
+ * Removes the specified entries from a stream.
+ *
+ * @returns The number of entries actually deleted
+ * @see https://redis.io/commands/xdel
+ */
+export function XDEL(
+  stream: RedisStream,
+  ...ids: [string, ...string[]]
+): RedisCommand<number> {
+  return new RedisCommand(["XDEL", stream.name, ...ids]);
+}
