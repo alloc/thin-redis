@@ -1,5 +1,5 @@
 import { Socket } from "@arrowood.dev/socket";
-import { getConnectFn } from "../src";
+import { getConnectFn } from "../src/utils/get-connect-fn";
 
 test("connect fn", async () => {
   await expect(getConnectFn()).resolves.not.toThrowError();
