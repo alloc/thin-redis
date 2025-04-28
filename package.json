@@ -4,8 +4,10 @@
   "description": "Connect to your Redis server using cloudflare:sockets",
   "sideEffects": false,
   "scripts": {
-    "build": "tsup",
-    "test": "vitest"
+    "dev": "tsup --clean --watch --sourcemap",
+    "build": "tsup --clean",
+    "test": "vitest",
+    "prepublishOnly": "pnpm build"
   },
   "main": "dist/index.mjs",
   "files": [
