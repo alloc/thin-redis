@@ -14,6 +14,20 @@ import {
 export * as XGROUP from "./stream/xgroup";
 
 /**
+ * Removes one or more entries from a pending message list.
+ *
+ * @returns The number of entries actually removed
+ * @see https://redis.io/commands/xack
+ */
+export function XACK(
+  stream: RedisStream,
+  group: RedisConsumerGroup,
+  ...ids: [string, ...string[]]
+): RedisCommand<number> {
+  return new RedisCommand(["XACK", stream.name, group.name, ...ids]);
+}
+
+/**
  * Appends the specified stream entry to the stream at the specified key.
  * If the key does not exist, it is created.
  *
