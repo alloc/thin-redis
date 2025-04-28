@@ -7,7 +7,8 @@
     "dev": "tsup --clean --watch --sourcemap",
     "build": "tsup --clean",
     "test": "vitest",
-    "prepublishOnly": "pnpm build"
+    "lint": "tsc-lint",
+    "prepublishOnly": "pnpm lint && pnpm build"
   },
   "main": "dist/index.mjs",
   "files": [
@@ -60,6 +61,7 @@
     "prettier": "^3.3.3",
     "prettier-plugin-organize-imports": "^4.1.0",
     "radashi": "13.0.0-beta.ffa4778",
+    "tsc-lint": "^0.1.9",
     "tsup": "^8.3.0",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3",
