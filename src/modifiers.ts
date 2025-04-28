@@ -268,6 +268,18 @@ export type MAXLEN = StaticModifier<typeof MAXLEN>;
 export const MINID = createModifier("MINID", StreamTrimArgs(Type.String()));
 export type MINID = StaticModifier<typeof MINID>;
 
+/** Maximum number of entries to return per stream. */
+export const COUNT = createModifier("COUNT", Type.Number());
+export type COUNT = StaticModifier<typeof COUNT>;
+
+/** Block for the specified time in milliseconds if no data is available. */
+export const BLOCK = createModifier("BLOCK", Type.Number());
+export type BLOCK = StaticModifier<typeof BLOCK>;
+
+/** Do not add messages to the Pending Entries List (PEL) in XREADGROUP. */
+export const NOACK = createModifier("NOACK");
+export type NOACK = StaticModifier<typeof NOACK>;
+
 /** Create the stream if it doesn't exist (used with XGROUP CREATE). */
 export const MKSTREAM = createModifier("MKSTREAM");
 export type MKSTREAM = StaticModifier<typeof MKSTREAM>;
