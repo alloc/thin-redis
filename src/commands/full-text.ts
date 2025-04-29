@@ -1,5 +1,5 @@
 import { RedisCommand } from "../command";
-import { RedisIndexKey } from "../key";
+import { RedisIndex } from "../key";
 import { encodeModifiers, Modifiers } from "../modifier";
 import {
   FILTER,
@@ -25,7 +25,7 @@ import {
  * @see https://redis.io/commands/ft.create
  */
 export function CREATE(
-  index: RedisIndexKey,
+  index: RedisIndex,
   schema: object | string[],
   ...modifiers: Modifiers<
     [
@@ -62,6 +62,6 @@ export function CREATE(
  * @see https://redis.io/commands/ft.search
  * @todo Implement modifiers
  */
-export function SEARCH(index: RedisIndexKey, query: string) {
+export function SEARCH(index: RedisIndex, query: string) {
   return new RedisCommand<string>(["FT.SEARCH", index.text, query]);
 }

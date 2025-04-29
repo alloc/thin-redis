@@ -77,7 +77,7 @@ export class RedisKey<
   }
 }
 
-export class RedisIndexKey {
-  declare $$typeof: "RedisIndexKey";
+export class RedisIndex {
+  declare $$typeof: "RedisIndex";
   constructor(readonly text: string) {}
 }

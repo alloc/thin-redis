@@ -6,7 +6,7 @@ import {
   ON,
   PREFIX,
   RedisClient,
-  RedisIndexKey,
+  RedisIndex,
   RedisKey,
 } from "../src";
 
@@ -17,7 +17,7 @@ test("full text search", async () => {
 
   expect(await redis.send(FLUSHALL())).toEqual("OK");
 
-  const idx = new RedisIndexKey("idx");
+  const idx = new RedisIndex("idx");
 
   expect(
     await redis.send(
