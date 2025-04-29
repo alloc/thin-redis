@@ -8,12 +8,10 @@ import {
 } from "@sinclair/typebox";
 import { Decode, Encode } from "@sinclair/typebox/value";
 import { RedisValue } from "./command";
-import { Value } from "./key";
+import { TRedisHash, Value } from "./key";
 
 export abstract class RedisTransform<
-  T extends TSchema | Record<string, TSchema> =
-    | TAnySchema
-    | Record<string, TAnySchema>,
+  T extends TSchema | TRedisHash = TAnySchema | TRedisHash,
 > {
   readonly schema: T;
   constructor(schema: T) {
