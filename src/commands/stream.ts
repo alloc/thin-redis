@@ -1,4 +1,3 @@
-import { TAnySchema, TSchema } from "@sinclair/typebox";
 import { castArray, isArray } from "radashi";
 import { RedisCommand, RedisValue } from "../command";
 import { Value } from "../key";
@@ -9,6 +8,7 @@ import {
   RedisStream,
   RedisStreamEntry,
   RedisStreamPosition,
+  TRedisStreamEntry,
 } from "../stream";
 
 export * as XGROUP from "./stream/xgroup";
@@ -34,10 +34,10 @@ export function XACK(
  * @returns The ID of the added entry
  * @see https://redis.io/commands/xadd
  */
-export function XADD<TField extends TSchema, TValue extends TSchema>(
-  stream: RedisStream<TField, TValue>,
+export function XADD<T extends TRedisStreamEntry>(
+  stream: RedisStream<T>,
   id: string | "*",
-  entries: readonly (Value<TField> | Value<TValue>)[],
+  data: Value<T>,
   ...modifiers: Modifiers<[MAXLEN | MINID]>
 ): RedisCommand<string>;
 
@@ -47,17 +47,17 @@ export function XADD<TField extends TSchema, TValue extends TSchema>(
  *
  * @see https://redis.io/commands/xadd
  */
-export function XADD<TField extends TSchema, TValue extends TSchema>(
-  stream: RedisStream<TField, TValue>,
+export function XADD<T extends TRedisStreamEntry>(
+  stream: RedisStream<T>,
   id: string | "*",
-  entries: readonly (Value<TField> | Value<TValue>)[],
+  data: Value<T>,
   ...modifiers: Modifiers<[Require<NOMKSTREAM>, MAXLEN | MINID]>
 ): RedisCommand<null>;
 
 export function XADD(
   stream: RedisStream,
   id: string | "*",
-  entries: readonly RedisValue[],
+  data: Value<TRedisStreamEntry>,
   ...modifiers: Modifiers<any>
 ): RedisCommand<any> {
   return new RedisCommand([
@@ -65,7 +65,7 @@ export function XADD(
     stream.name,
     ...encodeModifiers(modifiers),
     id,
-    ...stream.encodeEntries(entries),
+    ...Object.entries(stream.encode(data)).flat(),
   ]);
 }
 
@@ -87,10 +87,10 @@ export function XDEL(
  *
  * @see https://redis.io/commands/xread
  */
-export function XREAD<TField extends TSchema, TValue extends TSchema>(
-  sources: Source<TField, TValue>,
+export function XREAD<T extends TRedisStreamEntry>(
+  sources: Source<T>,
   ...modifiers: Modifiers<[COUNT, BLOCK]>
-): RedisCommand<RedisStreamEntry<TField, TValue>[]>;
+): RedisCommand<RedisStreamEntry<T>[]>;
 
 /**
  * Reads data from one or more streams.
@@ -101,8 +101,8 @@ export function XREAD<TSources extends readonly [Source, ...Source[]]>(
   sources: TSources,
   ...modifiers: Modifiers<[COUNT, BLOCK]>
 ): RedisCommand<{
-  [K in keyof TSources]: TSources[K] extends Source<infer TField, infer TValue>
-    ? RedisStreamEntry<TField, TValue>[]
+  [K in keyof TSources]: TSources[K] extends Source<infer T>
+    ? RedisStreamEntry<T>[]
     : never;
 }>;
 
@@ -121,12 +121,12 @@ export function XREAD(
  *
  * @see https://redis.io/commands/xreadgroup
  */
-export function XREADGROUP<TField extends TSchema, TValue extends TSchema>(
+export function XREADGROUP<T extends TRedisStreamEntry>(
   group: RedisConsumerGroup,
   consumer: string,
-  sources: Source<TField, TValue>,
+  sources: Source<T>,
   ...modifiers: Modifiers<[COUNT, BLOCK, NOACK]>
-): RedisCommand<RedisStreamEntry<TField, TValue>[]>;
+): RedisCommand<RedisStreamEntry<T>[]>;
 
 /**
  * Reads data from one or more streams, using a consumer group.
@@ -139,32 +139,34 @@ export function XREADGROUP<TSources extends readonly [Source, ...Source[]]>(
   sources: TSources,
   ...modifiers: Modifiers<[COUNT, BLOCK, NOACK]>
 ): RedisCommand<{
-  [K in keyof TSources]: TSources[K] extends Source<infer TField, infer TValue>
-    ? RedisStreamEntry<TField, TValue>[]
+  [K in keyof TSources]: TSources[K] extends Source<infer T>
+    ? RedisStreamEntry<T>[]
     : never;
 }>;
 
-export function XREADGROUP<TField extends TSchema, TValue extends TSchema>(
+export function XREADGROUP(
   group: RedisConsumerGroup,
   consumer: string,
-  sources: Source<TField, TValue> | readonly Source<TField, TValue>[],
+  sources: Source | readonly Source[],
   ...modifiers: Modifiers<[COUNT, BLOCK, NOACK]>
 ) {
-  return new RedisCommand([
-    "XREADGROUP",
-    "GROUP",
-    group.name,
-    consumer,
-    ...encodeModifiers(modifiers),
-    "STREAMS",
-    ...encodeSources(sources),
-  ]);
+  return new RedisCommand(
+    [
+      "XREADGROUP",
+      "GROUP",
+      group.name,
+      consumer,
+      ...encodeModifiers(modifiers),
+      "STREAMS",
+      ...encodeSources(sources),
+    ],
+    (response) => decodeStreamResponse(sources, response),
+  );
 }
 
-type Source<
-  TField extends TSchema = TAnySchema,
-  TValue extends TSchema = TAnySchema,
-> = RedisStream<TField, TValue> | RedisStreamPosition<TField, TValue>;
+type Source<T extends TRedisStreamEntry = TRedisStreamEntry> =
+  | RedisStream<T>
+  | RedisStreamPosition<T>;
 
 function encodeSources(sources: Source | readonly Source[]) {
   const streams: string[] = [];
@@ -202,10 +204,10 @@ function decodeStreamResponse(
   );
 }
 
-function castIndexToStream<TField extends TSchema, TValue extends TSchema>(
-  sources: Source<TField, TValue> | readonly Source<TField, TValue>[],
+function castIndexToStream(
+  sources: Source | readonly Source[],
   index: number,
-): RedisStream<TField, TValue> {
+): RedisStream {
   const source = isArray(sources) ? sources[index] : sources;
   return source instanceof RedisStream ? source : source.stream;
 }

@@ -1,27 +1,39 @@
-import { TAnySchema, TSchema } from "@sinclair/typebox";
-import { Decode, Encode } from "@sinclair/typebox/value";
+import {
+  TAnySchema,
+  TObject,
+  TRecord,
+  TSchema,
+  TString,
+} from "@sinclair/typebox";
 import { RedisValue } from "./command";
 import { Value } from "./key";
+import { RedisTransform } from "./transform";
+
+/** Any valid schema for a Redis stream entry. */
+export type TRedisStreamEntry<TValue extends TSchema = TAnySchema> =
+  | TObject
+  | TRecord<TString, TValue>;
+
+export type ReadStreamSpecialId = "$" | "+" | ">";
 
 export type RedisStreamPosition<
-  TField extends TSchema = TAnySchema,
-  TValue extends TSchema = TAnySchema,
+  T extends TRedisStreamEntry = TRedisStreamEntry,
 > = {
   $$typeof: "RedisStreamPosition";
-  stream: RedisStream<TField, TValue>;
-  id: string;
+  stream: RedisStream<T>;
+  id: ReadStreamSpecialId | (string & {});
 };
 
 export class RedisStream<
-  TField extends TSchema = TAnySchema,
-  TValue extends TSchema = TAnySchema,
-> {
+  T extends TRedisStreamEntry = TRedisStreamEntry,
+> extends RedisTransform<T> {
   declare $$typeof: "RedisStream";
   constructor(
     readonly name: string,
-    readonly fieldSchema: TField,
-    readonly valueSchema: TValue,
-  ) {}
+    entrySchema: T,
+  ) {
+    super(entrySchema);
+  }
 
   /**
    * For use with `XREAD` or `XREADGROUP`. Defines which ID was last delivered to the
@@ -33,68 +45,8 @@ export class RedisStream<
    * - **XREADGROUP special IDs**
    *   - `>` requests an entry not yet delivered to a consumer
    */
-  position(
-    id: "$" | "+" | ">" | (string & {}),
-  ): RedisStreamPosition<TField, TValue> {
+  position(id: ReadStreamSpecialId | (string & {})): RedisStreamPosition<T> {
     return { stream: this, id } as any;
-  }
-
-  encodeEntries(
-    entries: readonly (Value<TField> | Value<TValue>)[],
-  ): RedisValue[] {
-    return entries.map((entry, index) => {
-      if (index % 2 === 0) {
-        return this.encodeField(entry as Value<TField>);
-      }
-      return this.encodeValue(entry as Value<TValue>);
-    });
-  }
-
-  decodeEntries(
-    entries: readonly RedisValue[],
-  ): (Value<TField> | Value<TValue>)[] {
-    return entries.map((entry, index) => {
-      if (index % 2 === 0) {
-        return this.decodeField(entry);
-      }
-      return this.decodeValue(entry);
-    });
-  }
-
-  /**
-   * Encode a field name for a Redis stream entry.
-   */
-  encodeField(field: Value<TField>): RedisValue {
-    // The schema is defined for JS, not Redis, so a "decoded" value
-    // represents a Redis value.
-    return Decode(this.fieldSchema, field);
-  }
-
-  /**
-   * Decode a field name from a Redis-encoded value.
-   */
-  decodeField(field: unknown): Value<TField> {
-    // The schema is defined for JS, not Redis, so an "encoded" value
-    // represents a JS value.
-    return Encode(this.fieldSchema, field);
-  }
-
-  /**
-   * Encode a value for a Redis stream entry.
-   */
-  encodeValue(value: Value<TValue>): RedisValue {
-    // The schema is defined for JS, not Redis, so a "decoded" value
-    // represents a Redis value.
-    return Decode(this.valueSchema, value);
-  }
-
-  /**
-   * Decode a value from a Redis-encoded value.
-   */
-  decodeValue(value: unknown): Value<TValue> {
-    // The schema is defined for JS, not Redis, so an "encoded" value
-    // represents a JS value.
-    return Encode(this.valueSchema, value);
   }
 }
 
@@ -103,69 +55,21 @@ export class RedisConsumerGroup {
   constructor(readonly name: string) {}
 }
 
-export class RedisStreamEntry<
-  TField extends TSchema = TAnySchema,
-  TValue extends TSchema = TAnySchema,
-> implements Iterable<[Value<TField>, Value<TValue>]>
-{
+export class RedisStreamEntry<T extends TRedisStreamEntry = TRedisStreamEntry> {
   declare $$typeof: "RedisStreamEntry";
-  readonly data: (Value<TField> | Value<TValue>)[];
+  readonly data: Value<T>;
   constructor(
     /** The stream this entry belongs to */
-    readonly stream: RedisStream<TField, TValue>,
+    readonly stream: RedisStream<T>,
     /** The ID of this entry */
     readonly id: string,
     /** The fields and values of this entry */
-    data: RedisValue[],
+    entry: RedisValue[],
   ) {
-    this.data = stream.decodeEntries(data);
-  }
-
-  *[Symbol.iterator]() {
-    for (let i = 0; i < this.data.length; i += 2) {
-      yield [this.data[i], this.data[i + 1]] as [Value<TField>, Value<TValue>];
+    const data: Record<string, RedisValue> = {};
+    for (let i = 0; i < entry.length; i += 2) {
+      data[entry[i] as string] = entry[i + 1];
     }
-  }
-
-  /**
-   * Assert the entry has a single value and return it.
-   */
-  toValue() {
-    if (this.data.length !== 2) {
-      throw new TypeError("Entry must have exactly one field-value pair");
-    }
-    return this.data[1] as Value<TValue>;
-  }
-
-  /**
-   * Convert the entry's data into a record.
-   */
-  toRecord() {
-    const fieldType = this.stream.fieldSchema.type;
-    if (fieldType !== "string" && fieldType !== "number") {
-      throw new TypeError(
-        `Field schema must be a string or number, got ${fieldType}`,
-      );
-    }
-    type Key = Extract<Value<TField>, string | number>;
-    const data = {} as Record<Key, Value<TValue>>;
-    for (let i = 0; i < this.data.length; i += 2) {
-      data[this.data[i] as Key] = this.data[i + 1] as Value<TValue>;
-    }
-    return data;
-  }
-
-  /**
-   * Convert the entry's data into a map.
-   */
-  toMap() {
-    const data = new Map<Value<TField>, Value<TValue>>();
-    for (let i = 0; i < this.data.length; i += 2) {
-      data.set(
-        this.data[i] as Value<TField>,
-        this.data[i + 1] as Value<TValue>,
-      );
-    }
-    return data;
+    this.data = this.stream.decode(data) as any;
   }
 }
