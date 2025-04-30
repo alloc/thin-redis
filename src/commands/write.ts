@@ -36,7 +36,7 @@ export function EXPIRE(
   ...modifiers: Modifiers<[XX | NX | GT | LT]>
 ) {
   return new RedisCommand<boolean>(
-    ["EXPIRE", key.text, timeout, ...encodeModifiers(modifiers)],
+    ["EXPIRE", key.name, timeout, ...encodeModifiers(modifiers)],
     (result) => result === 1,
   );
 }
@@ -50,7 +50,7 @@ export function GETEX<T extends TSchema>(
   ...modifiers: Modifiers<[EX | PX | EXAT | PXAT | PERSIST]>
 ) {
   return new RedisCommand<Value<T> | undefined>(
-    ["GETEX", key.text, ...encodeModifiers(modifiers)],
+    ["GETEX", key.name, ...encodeModifiers(modifiers)],
     (result) => (result !== null ? key.decode(result) : undefined),
   );
 }
@@ -78,7 +78,7 @@ export function SET(
   ...modifiers: Modifiers
 ): RedisCommand<any> {
   return new RedisCommand(
-    ["SET", key.text, key.encode(value), ...encodeModifiers(modifiers)],
+    ["SET", key.name, key.encode(value), ...encodeModifiers(modifiers)],
     modifiers.some((m) => m?.token === "GET")
       ? (result) => (result !== null ? key.decode(result) : undefined)
       : (result) => result === "OK",
@@ -89,33 +89,33 @@ export function SET(
  * Delete a key or multiple keys.
  */
 export function DEL(...keys: [RedisKey, ...RedisKey[]]) {
-  return new RedisCommand<number>(["DEL", ...keys.map((k) => k.text)]);
+  return new RedisCommand<number>(["DEL", ...keys.map((k) => k.name)]);
 }
 
 /**
  * Decrement the value of a key by 1.
  */
 export function DECR(key: RedisKey<TNumber>) {
-  return new RedisCommand<number>(["DECR", key.text]);
+  return new RedisCommand<number>(["DECR", key.name]);
 }
 
 /**
  * Decrement the value of a key by a specific amount.
  */
 export function DECRBY(key: RedisKey<TNumber>, amount: number) {
-  return new RedisCommand<number>(["DECRBY", key.text, amount]);
+  return new RedisCommand<number>(["DECRBY", key.name, amount]);
 }
 
 /**
  * Increment the value of a key by 1.
  */
 export function INCR(key: RedisKey<TNumber>) {
-  return new RedisCommand<number>(["INCR", key.text]);
+  return new RedisCommand<number>(["INCR", key.name]);
 }
 
 /**
  * Increment the value of a key by a specific amount.
  */
 export function INCRBY(key: RedisKey<TNumber>, amount: number) {
-  return new RedisCommand<number>(["INCRBY", key.text, amount]);
+  return new RedisCommand<number>(["INCRBY", key.name, amount]);
 }

@@ -11,7 +11,7 @@ export function SADD<T extends TSchema>(
 ) {
   return new RedisCommand<number>([
     "SADD",
-    key.text,
+    key.name,
     ...members.map((member) => key.encode(member)),
   ]);
 }
@@ -20,7 +20,7 @@ export function SADD<T extends TSchema>(
  * Get the number of members in a set (AKA its cardinality).
  */
 export function SCARD<T extends TSchema>(key: RedisKey<T>) {
-  return new RedisCommand<number>(["SCARD", key.text]);
+  return new RedisCommand<number>(["SCARD", key.name]);
 }
 
 /**
@@ -30,7 +30,7 @@ export function SDIFF<T extends TSchema>(
   ...keys: [RedisKey<T>, ...RedisKey<T>[]]
 ) {
   return new RedisCommand<Value<T>[]>(
-    ["SDIFF", ...keys.map((key) => key.text)],
+    ["SDIFF", ...keys.map((key) => key.name)],
     (reply: unknown[]) => reply.map((value) => keys[0].decode(value)),
   );
 }
@@ -42,7 +42,7 @@ export function SINTER<T extends TSchema>(
   ...keys: [RedisKey<T>, ...RedisKey<T>[]]
 ) {
   return new RedisCommand<Value<T>[]>(
-    ["SINTER", ...keys.map((key) => key.text)],
+    ["SINTER", ...keys.map((key) => key.name)],
     (reply: unknown[]) => reply.map((value) => keys[0].decode(value)),
   );
 }
@@ -55,7 +55,7 @@ export function SISMEMBER<T extends TSchema>(
   member: Value<T>,
 ) {
   return new RedisCommand<boolean>(
-    ["SISMEMBER", key.text, key.encode(member)],
+    ["SISMEMBER", key.name, key.encode(member)],
     (reply) => reply === 1,
   );
 }
@@ -65,7 +65,7 @@ export function SISMEMBER<T extends TSchema>(
  */
 export function SMEMBERS<T extends TSchema>(key: RedisKey<T>) {
   return new RedisCommand<Value<T>[]>(
-    ["SMEMBERS", key.text],
+    ["SMEMBERS", key.name],
     (reply: unknown[]) => reply.map((value) => key.decode(value)),
   );
 }
@@ -87,7 +87,7 @@ export function SPOP<T extends TSchema>(
 
 export function SPOP<T extends TSchema>(key: RedisKey<T>, count?: number) {
   return new RedisCommand<Value<T> | Value<T>[] | undefined>(
-    count ? ["SPOP", key.text, count.toString()] : ["SPOP", key.text],
+    count ? ["SPOP", key.name, count.toString()] : ["SPOP", key.name],
     (reply) => {
       if (reply === null) return undefined;
       return Array.isArray(reply)
@@ -106,7 +106,7 @@ export function SREM<T extends TSchema>(
 ) {
   return new RedisCommand<number>([
     "SREM",
-    key.text,
+    key.name,
     ...members.map((member) => key.encode(member)),
   ]);
 }
@@ -116,7 +116,7 @@ export function SREM<T extends TSchema>(
  */
 export function SUNION<T extends TSchema>(...keys: RedisKey<T>[]) {
   return new RedisCommand<Value<T>[]>(
-    ["SUNION", ...keys.map((key) => key.text)],
+    ["SUNION", ...keys.map((key) => key.name)],
     (reply: unknown[]) => reply.map((value) => keys[0].decode(value)),
   );
 }

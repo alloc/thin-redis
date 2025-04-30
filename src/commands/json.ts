@@ -16,7 +16,7 @@ export function SET<T extends TSchema>(
 ) {
   return new RedisCommand<"OK" | null>([
     "JSON.SET",
-    key.text,
+    key.name,
     path,
     key.encode(value),
     ...encodeModifiers(modifiers),
@@ -29,7 +29,7 @@ export function SET<T extends TSchema>(
  */
 export function GET<T extends TSchema>(key: RedisKey<T>, paths: string[]) {
   return new RedisCommand<Value<T> | undefined>(
-    ["JSON.GET", key.text, ...paths],
+    ["JSON.GET", key.name, ...paths],
     (result) => (result !== null ? key.decode(result) : undefined),
   );
 }

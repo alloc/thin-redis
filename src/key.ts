@@ -30,7 +30,7 @@ export class RedisKey<
 > extends RedisTransform<T> {
   declare $$typeof: "RedisKey";
   constructor(
-    readonly text: string,
+    readonly name: string,
     schema: T,
   ) {
     super(schema);
@@ -42,7 +42,7 @@ export class RedisKey<
    */
   join(...keys: (string | number)[]) {
     if (keys.length === 0) return this;
-    return new RedisKey(`${this.text}:${keys.join(":")}`, this.schema);
+    return new RedisKey(`${this.name}:${keys.join(":")}`, this.schema);
   }
 
   /**
@@ -50,11 +50,11 @@ export class RedisKey<
    * to the current key with a colon between them.
    */
   match(pattern: string) {
-    return this.text + ":" + pattern;
+    return this.name + ":" + pattern;
   }
 
   toString() {
-    return this.text;
+    return this.name;
   }
 }
 

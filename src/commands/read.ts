@@ -20,7 +20,7 @@ export function GET<T extends TSchema>(
   if (!key) {
     return new RedisModifier("GET");
   }
-  return new RedisCommand(["GET", key.text], (result) =>
+  return new RedisCommand(["GET", key.name], (result) =>
     result !== null ? key.decode(result) : undefined,
   );
 }

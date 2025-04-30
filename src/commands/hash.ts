@@ -10,7 +10,7 @@ export function HGET<T extends TRedisHash, TField extends RedisField<T>>(
   field: TField,
 ) {
   return new RedisCommand<Static<T[TField]>>(
-    ["HGET", hash.text, field],
+    ["HGET", hash.name, field],
     (result) => hash.decodeField(field, result),
   );
 }
@@ -47,8 +47,8 @@ export function HSET<T extends TRedisHash>(
 ) {
   return new RedisCommand<number>(
     typeof field === "string"
-      ? ["HSET", hash.text, field, hash.encodeField(field, value)]
-      : ["HSET", hash.text, ...encodeHashEntries(hash, field).flat()],
+      ? ["HSET", hash.name, field, hash.encodeField(field, value)]
+      : ["HSET", hash.name, ...encodeHashEntries(hash, field).flat()],
   );
 }
 
