@@ -47,21 +47,18 @@ export function HSET<T extends TRedisHash>(
 ) {
   return new RedisCommand<number>(
     typeof field === "string"
-      ? ["HSET", hash.text, field, hash.encodeField(field, value) as any]
-      : [
-          "HSET",
-          hash.text,
-          ...encodeHashEntries(hash, Object.entries(field)).flat(),
-        ],
+      ? ["HSET", hash.text, field, hash.encodeField(field, value)]
+      : ["HSET", hash.text, ...encodeHashEntries(hash, field).flat()],
   );
 }
 
-function encodeHashEntries(hash: RedisHash, entries: [string, unknown][]) {
+function encodeHashEntries(hash: RedisHash, values: object) {
+  const entries = Object.entries(values) as [string, RedisValue][];
   if (entries.length === 0) {
     throw new Error("At least one field must be provided");
   }
   for (let i = 0; i < entries.length; i++) {
     entries[i][1] = hash.encodeField(entries[i][0], entries[i][1]);
   }
-  return entries as [string, RedisValue][];
+  return entries;
 }
