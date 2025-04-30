@@ -84,5 +84,5 @@ export class RedisHash<T extends TRedisHash = TRedisHash> extends RedisKey<T> {
 
 export class RedisIndex {
   declare $$typeof: "RedisIndex";
-  constructor(readonly text: string) {}
+  constructor(readonly name: string) {}
 }

@@ -49,7 +49,7 @@ export function CREATE(
 ) {
   return new RedisCommand<string>([
     "FT.CREATE",
-    index.text,
+    index.name,
     ...encodeModifiers(modifiers),
     "SCHEMA",
     ...(Array.isArray(schema) ? schema : Object.entries(schema).flat()),
@@ -63,5 +63,5 @@ export function CREATE(
  * @todo Implement modifiers
  */
 export function SEARCH(index: RedisIndex, query: string) {
-  return new RedisCommand<string>(["FT.SEARCH", index.text, query]);
+  return new RedisCommand<string>(["FT.SEARCH", index.name, query]);
 }
