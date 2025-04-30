@@ -98,17 +98,17 @@ export class Subscriber {
         command = "PSUBSCRIBE";
       }
 
-      let state = subs.get(key.text);
+      let state = subs.get(key.name);
       if (!state) {
         state = {
           streams: new Map(),
           subscribePromise: this.client
-            .sendRaw(new RedisCommand([command, key.text]))
+            .sendRaw(new RedisCommand([command, key.name]))
             .then(() => {
               state!.subscribePromise = null;
             }),
         };
-        subs.set(key.text, state);
+        subs.set(key.name, state);
       }
 
       state.streams.set(stream, {
@@ -141,14 +141,14 @@ export class Subscriber {
           command = "PUNSUBSCRIBE";
         }
 
-        const state = subs.get(key.text);
+        const state = subs.get(key.name);
         if (state && state.streams.delete(stream) && state.streams.size === 0) {
-          subs.delete(key.text);
+          subs.delete(key.name);
 
           if (subs.size === 0) {
             await self.close();
           } else {
-            await self.client.sendRaw(new RedisCommand([command, key.text]));
+            await self.client.sendRaw(new RedisCommand([command, key.name]));
           }
         }
       }

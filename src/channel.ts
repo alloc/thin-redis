@@ -11,7 +11,7 @@ export class RedisChannel<
 > extends RedisTransform<T> {
   declare $$typeof: "RedisChannel";
   constructor(
-    readonly text: string,
+    readonly name: string,
     schema: T,
   ) {
     super(schema);
@@ -24,7 +24,7 @@ export class RedisChannel<
    */
   join(...keys: (string | number)[]) {
     if (keys.length === 0) return this;
-    return new RedisChannel(`${this.text}:${keys.join(":")}`, this.schema);
+    return new RedisChannel(`${this.name}:${keys.join(":")}`, this.schema);
   }
 }
 
@@ -36,7 +36,7 @@ export class RedisChannelPattern<
 > extends RedisTransform<T> {
   declare $$typeof: "RedisChannelPattern";
   constructor(
-    readonly text: string,
+    readonly name: string,
     schema: T,
   ) {
     super(schema);

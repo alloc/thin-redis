@@ -12,7 +12,7 @@ export function PUBLISH<T extends TSchema>(
 ) {
   return new RedisCommand<number>([
     "PUBLISH",
-    channel.text,
+    channel.name,
     channel.encode(message),
   ]);
 }
