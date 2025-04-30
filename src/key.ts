@@ -52,10 +52,6 @@ export class RedisKey<
   match(pattern: string) {
     return this.name + ":" + pattern;
   }
-
-  toString() {
-    return this.name;
-  }
 }
 
 export class RedisHash<T extends TRedisHash = TRedisHash> extends RedisKey<T> {

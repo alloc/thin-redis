@@ -1,4 +1,5 @@
 import { TAnySchema, TSchema, TString, Type } from "@sinclair/typebox";
+import { isString } from "radashi";
 import { RedisKey } from "./key";
 import { RedisTransform } from "./transform";
 
@@ -49,7 +50,10 @@ export class RedisChannelPattern<
  */
 export class RedisKeyspacePattern extends RedisChannelPattern<TString> {
   constructor(pattern: string | RedisKey, database?: number) {
-    super(`__keyspace@${database ?? "*"}__:${pattern}`, Type.String());
+    super(
+      `__keyspace@${database ?? "*"}__:${isString(pattern) ? pattern : pattern.name}`,
+      Type.String(),
+    );
   }
 }
 
