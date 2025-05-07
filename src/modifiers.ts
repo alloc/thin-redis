@@ -247,7 +247,7 @@ export type DIALECT = StaticModifier<typeof DIALECT>;
 export const NOMKSTREAM = createModifier("NOMKSTREAM");
 export type NOMKSTREAM = StaticModifier<typeof NOMKSTREAM>;
 
-const StreamTrimArgs = (Threshold: TSchema) =>
+const StreamTrimArgs = <TThreshold extends TSchema>(Threshold: TThreshold) =>
   Type.Union([
     Type.Tuple([Threshold]),
     Type.Tuple([Threshold, Type.Literal("LIMIT"), Type.Number()]),
