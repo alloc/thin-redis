@@ -1,4 +1,4 @@
-import { Static, TAnySchema, TSchema } from "@sinclair/typebox";
+import { Static, StaticDecode, TAnySchema, TSchema } from "@sinclair/typebox";
 import { Decode, Encode } from "@sinclair/typebox/value";
 import { RedisValue } from "./command";
 import { RedisTransform } from "./transform";
@@ -11,9 +11,11 @@ export type TRedisHash<TValue extends TSchema = TAnySchema> = Record<
 /**
  * The value type of a Redis key that points to a primitive value or a hash map.
  */
-export type Value<T extends TSchema | TRedisHash<TSchema>> = T extends TSchema
-  ? Static<T>
-  : { [K in RedisField<T>]?: Value<T[K]> };
+export type Value<T extends TSchema | TRedisHash<TSchema>> = [T] extends [
+  TSchema,
+]
+  ? StaticDecode<T>
+  : { [K in RedisField<T>]?: StaticDecode<T[K]> };
 
 /**
  * A field name of a Redis key that points to a hash map.
