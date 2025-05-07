@@ -81,11 +81,8 @@ export type StaticModifierArgs<T extends TSchema> = //
 /**
  * Represents a permutation of modifiers.
  */
-export type Modifiers<TOptions extends RedisModifier[] = RedisModifier[]> = [
-  TOptions,
-] extends [never[]]
-  ? []
-  : RedisModifier[] extends TOptions
+export type Modifiers<TOptions extends RedisModifier[] = RedisModifier[]> =
+  RedisModifier[] extends TOptions
     ? (RedisModifier | undefined)[]
     : TOptions extends [
           infer TFirst extends RedisModifier,
@@ -93,8 +90,8 @@ export type Modifiers<TOptions extends RedisModifier[] = RedisModifier[]> = [
         ]
       ? IsRequired<TFirst> extends true
         ? [TFirst, ...Modifiers<TRest>]
-        : [TFirst | undefined, ...Modifiers<TRest>] | Modifiers<TRest>
-      : never;
+        : [TFirst?, ...Modifiers<TRest>]
+      : [];
 
 /** For modifiers that affect which overload is used. */
 export type Require<T> = T & {
