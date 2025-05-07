@@ -36,7 +36,7 @@ export function XACK(
  */
 export function XADD<T extends TRedisStreamEntry>(
   stream: RedisStream<T>,
-  id: string | "*",
+  id: "*" | (string & {}),
   data: Value<T>,
   ...modifiers: Modifiers<[MAXLEN | MINID]>
 ): RedisCommand<string>;
