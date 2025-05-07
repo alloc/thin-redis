@@ -1,18 +1,12 @@
-import {
-  TAnySchema,
-  TObject,
-  TRecord,
-  TSchema,
-  TString,
-} from "@sinclair/typebox";
+import { TObject, TRecord, TSchema, TString } from "@sinclair/typebox";
 import { RedisValue } from "./command";
 import { Value } from "./key";
 import { RedisTransform } from "./transform";
 
 /** Any valid schema for a Redis stream entry. */
-export type TRedisStreamEntry<TValue extends TSchema = TAnySchema> =
-  | TObject
-  | TRecord<TString, TValue>;
+export type TRedisStreamEntry =
+  | TObject<Record<string, TSchema>>
+  | TRecord<TString, TSchema>;
 
 export type ReadStreamSpecialId = "$" | "+" | ">";
 

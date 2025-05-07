@@ -1,5 +1,4 @@
 import {
-  TAnySchema,
   TBoolean,
   TNumber,
   Transform,
@@ -11,7 +10,7 @@ import { RedisValue } from "./command";
 import { TRedisHash, Value } from "./key";
 
 export abstract class RedisTransform<
-  T extends TSchema | TRedisHash = TAnySchema | TRedisHash,
+  T extends TSchema | TRedisHash = TSchema | TRedisHash,
 > {
   readonly schema: T;
   constructor(schema: T) {

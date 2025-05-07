@@ -1,4 +1,4 @@
-import { TAnySchema, TSchema, TString, Type } from "@sinclair/typebox";
+import { TSchema, TString, Type } from "@sinclair/typebox";
 import { isString } from "radashi";
 import { RedisKey } from "./key";
 import { RedisTransform } from "./transform";
@@ -7,7 +7,7 @@ import { RedisTransform } from "./transform";
  * Channels use the `SUBSCRIBE` command.
  */
 export class RedisChannel<
-  T extends TSchema = TAnySchema,
+  T extends TSchema = TSchema,
 > extends RedisTransform<T> {
   declare $$typeof: "RedisChannel";
   constructor(
@@ -32,7 +32,7 @@ export class RedisChannel<
  * Channel patterns use the `PSUBSCRIBE` command.
  */
 export class RedisChannelPattern<
-  T extends TSchema = TAnySchema,
+  T extends TSchema = TSchema,
 > extends RedisTransform<T> {
   declare $$typeof: "RedisChannelPattern";
   constructor(

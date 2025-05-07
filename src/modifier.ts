@@ -1,10 +1,4 @@
-import {
-  Static,
-  TAnySchema,
-  TSchema,
-  TTuple,
-  TUndefined,
-} from "@sinclair/typebox";
+import { Static, TSchema, TTuple, TUndefined } from "@sinclair/typebox";
 import { Encode } from "@sinclair/typebox/value";
 import { RedisValue } from "./command";
 
@@ -50,7 +44,7 @@ export function encodeModifiers(
 
 export type RedisModifierFunction<
   K extends string = string,
-  T extends TSchema = TAnySchema,
+  T extends TSchema = TSchema,
 > = (...args: StaticModifierArgs<T>) => RedisModifier<K>;
 
 export class RedisModifier<K extends string = string> {

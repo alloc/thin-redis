@@ -1,9 +1,9 @@
-import { Static, StaticDecode, TAnySchema, TSchema } from "@sinclair/typebox";
+import { Static, StaticDecode, TSchema } from "@sinclair/typebox";
 import { Decode, Encode } from "@sinclair/typebox/value";
 import { RedisValue } from "./command";
 import { RedisTransform } from "./transform";
 
-export type TRedisHash<TValue extends TSchema = TAnySchema> = Record<
+export type TRedisHash<TValue extends TSchema = TSchema> = Record<
   string,
   TValue
 >;
@@ -11,9 +11,7 @@ export type TRedisHash<TValue extends TSchema = TAnySchema> = Record<
 /**
  * The value type of a Redis key that points to a primitive value or a hash map.
  */
-export type Value<T extends TSchema | TRedisHash<TSchema>> = [T] extends [
-  TSchema,
-]
+export type Value<T extends TSchema | TRedisHash> = T extends TSchema
   ? StaticDecode<T>
   : { [K in RedisField<T>]?: StaticDecode<T[K]> };
 
@@ -28,7 +26,7 @@ export type RedisField<T extends TSchema | TRedisHash> = T extends TSchema
  * A Redis key that points to a primitive value or a hash map.
  */
 export class RedisKey<
-  T extends TSchema | TRedisHash = TAnySchema | TRedisHash,
+  T extends TSchema | TRedisHash = TSchema | TRedisHash,
 > extends RedisTransform<T> {
   declare $$typeof: "RedisKey";
   constructor(
@@ -56,7 +54,7 @@ export class RedisKey<
   }
 }
 
-export class RedisSet<T extends TSchema = TAnySchema> extends RedisKey<T> {
+export class RedisSet<T extends TSchema = TSchema> extends RedisKey<T> {
   declare $$typeof: "RedisKey" & { subtype: "RedisSet" };
 }
 
