@@ -1,15 +1,14 @@
-import { TSchema } from "@sinclair/typebox";
+import { StaticEncode, TSchema } from "@sinclair/typebox";
 import { castArray } from "radashi";
 import { RedisChannel, RedisChannelPattern } from "./channel";
 import { RedisClient } from "./client";
 import { RedisCommand, RedisValue } from "./command";
-import { Value } from "./key";
 import { RedisClientOptions } from "./type";
 import { stringifyResult } from "./utils/stringify-result";
 
 export interface SubscribeCallback<T extends TSchema = TSchema> {
   (
-    message: Value<T>,
+    message: StaticEncode<T>,
     channel: string,
     pattern: RedisChannel<T> | RedisChannelPattern<T>,
   ): void;
@@ -181,7 +180,7 @@ export class MessageEvent<T extends TSchema = TSchema> {
   #stream: TransformStream;
 
   constructor(
-    readonly data: Value<T>,
+    readonly data: StaticEncode<T>,
     readonly channel: string,
     readonly key: SubscriptionKey<T>,
     stream: TransformStream,

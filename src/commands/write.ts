@@ -1,6 +1,6 @@
-import { TNumber, TSchema } from "@sinclair/typebox";
+import { StaticEncode, TNumber, TSchema } from "@sinclair/typebox";
 import { RedisCommand } from "../command";
-import { RedisKey, Value } from "../key";
+import { RedisKey } from "../key";
 import { encodeModifiers, Modifiers, Require } from "../modifier";
 import {
   EX,
@@ -49,7 +49,7 @@ export function GETEX<T extends TSchema>(
   key: RedisKey<T>,
   ...modifiers: Modifiers<[EX | PX | EXAT | PXAT | PERSIST]>
 ) {
-  return new RedisCommand<Value<T> | undefined>(
+  return new RedisCommand<StaticEncode<T> | undefined>(
     ["GETEX", key.name, ...encodeModifiers(modifiers)],
     (result) => (result !== null ? key.decode(result) : undefined),
   );
@@ -60,21 +60,21 @@ export function GETEX<T extends TSchema>(
  */
 export function SET<T extends TSchema>(
   key: RedisKey<T>,
-  value: Value<T>,
+  value: StaticEncode<T>,
   ...modifiers: Modifiers<
     [NX | XX, Require<GET>, EX | PX | EXAT | PXAT | KEEPTTL]
   >
-): RedisCommand<Value<T> | undefined>;
+): RedisCommand<StaticEncode<T> | undefined>;
 
 export function SET<T extends TSchema>(
   key: RedisKey<T>,
-  value: Value<T>,
+  value: StaticEncode<T>,
   ...modifiers: Modifiers<[NX | XX, EX | PX | EXAT | PXAT | KEEPTTL]>
 ): RedisCommand<boolean>;
 
 export function SET(
   key: RedisKey<any>,
-  value: Value<any>,
+  value: StaticEncode<any>,
   ...modifiers: Modifiers
 ): RedisCommand<any> {
   return new RedisCommand(

@@ -1,4 +1,5 @@
 import {
+  StaticEncode,
   TBoolean,
   TNumber,
   Transform,
@@ -7,7 +8,11 @@ import {
 } from "@sinclair/typebox";
 import { Decode, Encode } from "@sinclair/typebox/value";
 import { RedisValue } from "./command";
-import { TRedisHash, Value } from "./key";
+import { StaticHash, TRedisHash } from "./key";
+
+type Value<T extends TSchema | TRedisHash> = T extends TSchema
+  ? StaticEncode<T>
+  : StaticHash<T>;
 
 export abstract class RedisTransform<
   T extends TSchema | TRedisHash = TSchema | TRedisHash,
@@ -20,7 +25,7 @@ export abstract class RedisTransform<
   /**
    * Get a Redis-encoded value from a JS value.
    */
-  encode(value: Value<T>): RedisValue {
+  encode(value: unknown): RedisValue {
     // The schema is defined for JS, not Redis, so a "decoded" value
     // represents a Redis value.
     return Decode(this.schema as TSchema, value);
@@ -36,7 +41,13 @@ export abstract class RedisTransform<
   }
 }
 
-function createRedisTransform(schema: TSchema | Record<string, TSchema>) {
+/**
+ * Wrap the JavaScript types with Redis-targeted transform types.
+ *
+ * Note: The encode/decode methods are flipped, because TypeBox expects
+ * transform types to operate on input values, not output values.
+ */
+function createRedisTransform(schema: TSchema | TRedisHash) {
   if (!TypeGuard.IsSchema(schema)) {
     const newSchema = { ...schema };
     for (const field in schema) {

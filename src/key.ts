@@ -1,4 +1,4 @@
-import { Static, StaticDecode, TSchema } from "@sinclair/typebox";
+import { StaticEncode, TSchema } from "@sinclair/typebox";
 import { Decode, Encode } from "@sinclair/typebox/value";
 import { RedisValue } from "./command";
 import { RedisTransform } from "./transform";
@@ -8,12 +8,9 @@ export type TRedisHash<TValue extends TSchema = TSchema> = Record<
   TValue
 >;
 
-/**
- * The value type of a Redis key that points to a primitive value or a hash map.
- */
-export type Value<T extends TSchema | TRedisHash> = T extends TSchema
-  ? StaticDecode<T>
-  : { [K in RedisField<T>]?: StaticDecode<T[K]> };
+export type StaticHash<T extends TRedisHash> = {
+  [K in RedisField<T>]: StaticEncode<T[K]>;
+};
 
 /**
  * A field name of a Redis key that points to a hash map.
@@ -66,7 +63,7 @@ export class RedisHash<T extends TRedisHash = TRedisHash> extends RedisKey<T> {
    */
   encodeField<TField extends RedisField<T>>(
     field: TField,
-    value: Static<T[TField]>,
+    value: StaticEncode<T[TField]>,
   ): RedisValue {
     // The schema is defined for JS, not Redis, so a "decoded" value
     // represents a Redis value.
@@ -79,7 +76,7 @@ export class RedisHash<T extends TRedisHash = TRedisHash> extends RedisKey<T> {
   decodeField<TField extends RedisField<T>>(
     field: TField,
     value: unknown,
-  ): T extends TSchema ? never : Static<T[TField]> {
+  ): T extends TSchema ? never : StaticEncode<T[TField]> {
     // The schema is defined for JS, not Redis, so an "encoded" value
     // represents a JS value.
     return Encode(this.schema[field], value);

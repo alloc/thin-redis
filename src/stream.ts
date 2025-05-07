@@ -1,6 +1,11 @@
-import { TObject, TRecord, TSchema, TString } from "@sinclair/typebox";
+import {
+  StaticEncode,
+  TObject,
+  TRecord,
+  TSchema,
+  TString,
+} from "@sinclair/typebox";
 import { RedisValue } from "./command";
-import { Value } from "./key";
 import { RedisTransform } from "./transform";
 
 /** Any valid schema for a Redis stream entry. */
@@ -51,7 +56,7 @@ export class RedisConsumerGroup {
 
 export class RedisStreamEntry<T extends TRedisStreamEntry = TRedisStreamEntry> {
   declare $$typeof: "RedisStreamEntry";
-  readonly data: Value<T>;
+  readonly data: StaticEncode<T>;
   constructor(
     /** The stream this entry belongs to */
     readonly stream: RedisStream<T>,

@@ -1,6 +1,6 @@
+import { StaticEncode } from "@sinclair/typebox";
 import { castArray, isArray } from "radashi";
 import { RedisCommand, RedisValue } from "../command";
-import { Value } from "../key";
 import { encodeModifiers, Modifiers, Require } from "../modifier";
 import { BLOCK, COUNT, MAXLEN, MINID, NOACK, NOMKSTREAM } from "../modifiers";
 import {
@@ -37,7 +37,7 @@ export function XACK(
 export function XADD<T extends TRedisStreamEntry>(
   stream: RedisStream<T>,
   id: "*" | (string & {}),
-  data: Value<T>,
+  data: StaticEncode<T>,
   ...modifiers: Modifiers<[MAXLEN | MINID]>
 ): RedisCommand<string>;
 
@@ -50,14 +50,14 @@ export function XADD<T extends TRedisStreamEntry>(
 export function XADD<T extends TRedisStreamEntry>(
   stream: RedisStream<T>,
   id: "*" | (string & {}),
-  data: Value<T>,
+  data: StaticEncode<T>,
   ...modifiers: Modifiers<[Require<NOMKSTREAM>, MAXLEN | MINID]>
 ): RedisCommand<null>;
 
 export function XADD<T extends TRedisStreamEntry>(
   stream: RedisStream<T>,
   id: "*" | (string & {}),
-  data: Value<T>,
+  data: StaticEncode<T>,
   ...modifiers: Modifiers
 ): RedisCommand<any> {
   return new RedisCommand([

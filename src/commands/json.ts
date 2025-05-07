@@ -1,6 +1,6 @@
-import { TSchema } from "@sinclair/typebox";
+import { StaticEncode, TSchema } from "@sinclair/typebox";
 import { RedisCommand } from "../command";
-import { RedisKey, Value } from "../key";
+import { RedisKey } from "../key";
 import { encodeModifiers, Modifiers } from "../modifier";
 import { NX, XX } from "../modifiers";
 
@@ -11,7 +11,7 @@ import { NX, XX } from "../modifiers";
 export function SET<T extends TSchema>(
   key: RedisKey<T>,
   path: string,
-  value: Value<T>,
+  value: StaticEncode<T>,
   ...modifiers: Modifiers<[NX | XX]>
 ) {
   return new RedisCommand<"OK" | null>([
@@ -28,7 +28,7 @@ export function SET<T extends TSchema>(
  * @see https://redis.io/commands/json.get/
  */
 export function GET<T extends TSchema>(key: RedisKey<T>, paths: string[]) {
-  return new RedisCommand<Value<T> | undefined>(
+  return new RedisCommand<StaticEncode<T> | undefined>(
     ["JSON.GET", key.name, ...paths],
     (result) => (result !== null ? key.decode(result) : undefined),
   );

@@ -1,6 +1,6 @@
-import { Static } from "@sinclair/typebox";
+import { Static, StaticEncode } from "@sinclair/typebox";
 import { RedisCommand, RedisValue } from "../command";
-import { RedisField, RedisHash, TRedisHash, Value } from "../key";
+import { RedisField, RedisHash, TRedisHash } from "../key";
 
 /**
  * Get the value of a field in a hash.
@@ -29,7 +29,7 @@ export function HSET<T extends TRedisHash, TField extends RedisField<T>>(
 export function HSET<T extends TRedisHash, TField extends RedisField<T>>(
   hash: RedisHash<T>,
   field: TField,
-  value: Value<T[TField]>,
+  value: StaticEncode<T[TField]>,
 ): RedisCommand<number>;
 
 /**
@@ -37,7 +37,7 @@ export function HSET<T extends TRedisHash, TField extends RedisField<T>>(
  */
 export function HSET<T extends TRedisHash>(
   hash: RedisHash<T>,
-  values: { [K in RedisField<T>]?: Value<T[K]> },
+  values: { [K in RedisField<T>]?: StaticEncode<T[K]> },
 ): RedisCommand<number>;
 
 export function HSET<T extends TRedisHash>(
