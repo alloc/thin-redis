@@ -1,12 +1,12 @@
 import { TSchema } from "@sinclair/typebox";
 import { RedisCommand } from "../command";
-import { RedisKey, Value } from "../key";
+import { RedisSet, Value } from "../key";
 
 /**
  * Add one or more members to a set
  */
 export function SADD<T extends TSchema>(
-  key: RedisKey<T>,
+  key: RedisSet<T>,
   ...members: [Value<T>, ...Value<T>[]]
 ) {
   return new RedisCommand<number>([
@@ -19,7 +19,7 @@ export function SADD<T extends TSchema>(
 /**
  * Get the number of members in a set (AKA its cardinality).
  */
-export function SCARD<T extends TSchema>(key: RedisKey<T>) {
+export function SCARD<T extends TSchema>(key: RedisSet<T>) {
   return new RedisCommand<number>(["SCARD", key.name]);
 }
 
@@ -27,7 +27,7 @@ export function SCARD<T extends TSchema>(key: RedisKey<T>) {
  * Return the difference between multiple sets
  */
 export function SDIFF<T extends TSchema>(
-  ...keys: [RedisKey<T>, ...RedisKey<T>[]]
+  ...keys: [RedisSet<T>, ...RedisSet<T>[]]
 ) {
   return new RedisCommand<Value<T>[]>(
     ["SDIFF", ...keys.map((key) => key.name)],
@@ -39,7 +39,7 @@ export function SDIFF<T extends TSchema>(
  * Return the intersection of multiple sets
  */
 export function SINTER<T extends TSchema>(
-  ...keys: [RedisKey<T>, ...RedisKey<T>[]]
+  ...keys: [RedisSet<T>, ...RedisSet<T>[]]
 ) {
   return new RedisCommand<Value<T>[]>(
     ["SINTER", ...keys.map((key) => key.name)],
@@ -51,7 +51,7 @@ export function SINTER<T extends TSchema>(
  * Check if member is a member of the set
  */
 export function SISMEMBER<T extends TSchema>(
-  key: RedisKey<T>,
+  key: RedisSet<T>,
   member: Value<T>,
 ) {
   return new RedisCommand<boolean>(
@@ -63,7 +63,7 @@ export function SISMEMBER<T extends TSchema>(
 /**
  * Get all members in a set
  */
-export function SMEMBERS<T extends TSchema>(key: RedisKey<T>) {
+export function SMEMBERS<T extends TSchema>(key: RedisSet<T>) {
   return new RedisCommand<Value<T>[]>(
     ["SMEMBERS", key.name],
     (reply: unknown[]) => reply.map((value) => key.decode(value)),
@@ -74,18 +74,18 @@ export function SMEMBERS<T extends TSchema>(key: RedisKey<T>) {
  * Remove and return a random member from a set
  */
 export function SPOP<T extends TSchema>(
-  key: RedisKey<T>,
+  key: RedisSet<T>,
 ): RedisCommand<Value<T> | undefined>;
 
 /**
  * Remove and return one or multiple random members from a set
  */
 export function SPOP<T extends TSchema>(
-  key: RedisKey<T>,
+  key: RedisSet<T>,
   count: number,
 ): RedisCommand<Value<T>[]>;
 
-export function SPOP<T extends TSchema>(key: RedisKey<T>, count?: number) {
+export function SPOP<T extends TSchema>(key: RedisSet<T>, count?: number) {
   return new RedisCommand<Value<T> | Value<T>[] | undefined>(
     count ? ["SPOP", key.name, count.toString()] : ["SPOP", key.name],
     (reply) => {
@@ -101,7 +101,7 @@ export function SPOP<T extends TSchema>(key: RedisKey<T>, count?: number) {
  * Remove one or more members from a set
  */
 export function SREM<T extends TSchema>(
-  key: RedisKey<T>,
+  key: RedisSet<T>,
   ...members: Value<T>[]
 ) {
   return new RedisCommand<number>([
@@ -114,7 +114,7 @@ export function SREM<T extends TSchema>(
 /**
  * Return the union of multiple sets
  */
-export function SUNION<T extends TSchema>(...keys: RedisKey<T>[]) {
+export function SUNION<T extends TSchema>(...keys: RedisSet<T>[]) {
   return new RedisCommand<Value<T>[]>(
     ["SUNION", ...keys.map((key) => key.name)],
     (reply: unknown[]) => reply.map((value) => keys[0].decode(value)),

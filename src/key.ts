@@ -54,6 +54,10 @@ export class RedisKey<
   }
 }
 
+export class RedisSet<T extends TSchema = TAnySchema> extends RedisKey<T> {
+  declare $$typeof: "RedisKey" & { subtype: "RedisSet" };
+}
+
 export class RedisHash<T extends TRedisHash = TRedisHash> extends RedisKey<T> {
   declare $$typeof: "RedisKey" & { subtype: "RedisHash" };
 
