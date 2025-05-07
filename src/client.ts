@@ -160,34 +160,6 @@ export class RedisClient {
     return this.#connection;
   }
 
-  public async sendOnce<TResult>(
-    command: RedisCommand<TResult>,
-  ): Promise<TResult>;
-
-  public async sendOnce<const TResults extends any[]>(commands: {
-    [I in keyof TResults]: RedisCommand<TResults[I]>;
-  }): Promise<TResults>;
-
-  public async sendOnce(command: RedisCommand | RedisCommand[]) {
-    try {
-      return await this.send(command);
-    } finally {
-      await this.close();
-    }
-  }
-
-  public async sendOnceRaw(command: RedisCommand): Promise<RedisResponse>;
-
-  public async sendOnceRaw(commands: RedisCommand[]): Promise<RedisResponse[]>;
-
-  public async sendOnceRaw(command: RedisCommand | RedisCommand[]) {
-    try {
-      return await this.sendRaw(command);
-    } finally {
-      await this.close();
-    }
-  }
-
   public async send<TResult>(command: RedisCommand<TResult>): Promise<TResult>;
 
   public async send<const TResults extends any[]>(commands: {
