@@ -58,7 +58,7 @@ export function XADD(
   stream: RedisStream,
   id: "*" | (string & {}),
   data: Value<TRedisStreamEntry>,
-  ...modifiers: Modifiers<any>
+  ...modifiers: Modifiers
 ): RedisCommand<any> {
   return new RedisCommand([
     "XADD",
@@ -108,7 +108,7 @@ export function XREAD<TSources extends readonly [Source, ...Source[]]>(
 
 export function XREAD(
   sources: Source | readonly Source[],
-  ...modifiers: Modifiers<any>
+  ...modifiers: Modifiers
 ) {
   return new RedisCommand<any[]>(
     ["XREAD", ...encodeModifiers(modifiers), ...encodeSources(sources)],

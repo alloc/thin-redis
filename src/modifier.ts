@@ -81,23 +81,19 @@ export type StaticModifierArgs<T extends TSchema> = //
 /**
  * Represents a permutation of modifiers.
  */
-export type Modifiers<TOptions extends RedisModifier[] = RedisModifier[]> =
-  RedisModifier[] extends TOptions
+export type Modifiers<TOptions extends RedisModifier[] = RedisModifier[]> = [
+  TOptions,
+] extends [never[]]
+  ? []
+  : RedisModifier[] extends TOptions
     ? (RedisModifier | undefined)[]
     : TOptions extends [
           infer TFirst extends RedisModifier,
           ...infer TRest extends RedisModifier[],
         ]
-      ? TRest extends []
-        ? [TFirst]
-        : TFirst extends Require<infer TRequired>
-          ?
-              | [TRequired, ...UndefinedElements<TRest>]
-              | [TRequired, ...Modifiers<TRest>]
-          :
-              | [TFirst | undefined, ...UndefinedElements<TRest>]
-              | [TFirst | undefined, ...Modifiers<TRest>]
-              | Modifiers<TRest>
+      ? IsRequired<TFirst> extends true
+        ? [TFirst, ...Modifiers<TRest>]
+        : [TFirst | undefined, ...Modifiers<TRest>] | Modifiers<TRest>
       : never;
 
 /** For modifiers that affect which overload is used. */
@@ -105,4 +101,8 @@ export type Require<T> = T & {
   $$required?: true;
 };
 
-type UndefinedElements<T extends unknown[]> = { [K in keyof T]?: undefined };
+type IsRequired<T> = T extends { $$required?: infer TRequired }
+  ? true extends TRequired
+    ? true
+    : false
+  : false;
