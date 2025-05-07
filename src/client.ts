@@ -1,7 +1,7 @@
 import { TSchema } from "@sinclair/typebox";
 import { castArrayIfExists } from "radashi";
 import { RedisChannel, RedisChannelPattern } from "./channel";
-import { RedisCommand, RedisValue } from "./command";
+import { Materialize, RedisCommand, RedisValue } from "./command";
 import { MessageEvent, Subscriber } from "./subscriber";
 import { ConnectionInstance, RedisClientOptions, RedisResponse } from "./type";
 import { createParser } from "./utils/create-parser";
@@ -162,19 +162,24 @@ export class RedisClient {
 
   public async send<TResult>(command: RedisCommand<TResult>): Promise<TResult>;
 
-  public async send<const TResults extends any[]>(commands: {
-    [I in keyof TResults]: RedisCommand<TResults[I]>;
-  }): Promise<TResults>;
+  public async send<const TCommands extends (RedisCommand | undefined)[]>(
+    commands: TCommands,
+  ): Promise<Materialize<TCommands>>;
 
-  public async send(command: RedisCommand | RedisCommand[]): Promise<any>;
+  public async send(
+    command: RedisCommand | (RedisCommand | undefined)[],
+  ): Promise<any>;
 
-  public async send(command: RedisCommand | RedisCommand[]) {
+  public async send(command: RedisCommand | (RedisCommand | undefined)[]) {
     if (Array.isArray(command)) {
       const rawResults = await this.sendRaw(command);
-      return command.map(({ decode }, index) => {
+      return command.map((command, index) => {
+        if (!command) {
+          return undefined;
+        }
         const rawResult = rawResults[index];
         const result = stringifyResult(rawResult);
-        return decode ? decode(result) : result;
+        return command?.decode ? command.decode(result) : result;
       });
     }
     const rawResult = await this.sendRaw(command);
@@ -184,19 +189,23 @@ export class RedisClient {
 
   public async sendRaw(command: RedisCommand): Promise<RedisResponse>;
 
-  public async sendRaw(command: RedisCommand[]): Promise<RedisResponse[]>;
+  public async sendRaw(
+    command: (RedisCommand | undefined)[],
+  ): Promise<RedisResponse[]>;
 
-  public async sendRaw(command: RedisCommand | RedisCommand[]): Promise<any>;
+  public async sendRaw(
+    command: RedisCommand | (RedisCommand | undefined)[],
+  ): Promise<any>;
 
-  public async sendRaw(command: RedisCommand | RedisCommand[]) {
+  public async sendRaw(command: RedisCommand | (RedisCommand | undefined)[]) {
     const connection = await this.connect();
 
-    let promises: Promise<RedisResponse>[];
+    let promises: (Promise<RedisResponse> | undefined)[];
 
     // Use a write lock to avoid out-of-order command execution.
     await (this.#writeLock = this.#writeLock.then(async () => {
       promises = await this.writeCommands(
-        Array.isArray(command) ? command.map((c) => c.args) : [command.args],
+        Array.isArray(command) ? command.map((c) => c?.args) : [command.args],
         connection.writer,
       );
     }));
@@ -209,11 +218,14 @@ export class RedisClient {
   }
 
   private async writeCommands(
-    commands: [string, ...RedisValue[]][],
+    commands: ([string, ...RedisValue[]] | undefined)[],
     writer: WritableStreamDefaultWriter<Uint8Array>,
   ) {
     const chunks: Array<string | Uint8Array> = [];
     const promises = commands.map((command) => {
+      if (!command) {
+        return;
+      }
       encodeCommand(command, chunks);
       return new Promise<RedisResponse>((resolve, reject) => {
         this.#responseQueue.push({ resolve, reject });
