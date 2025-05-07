@@ -54,10 +54,10 @@ export function XADD<T extends TRedisStreamEntry>(
   ...modifiers: Modifiers<[Require<NOMKSTREAM>, MAXLEN | MINID]>
 ): RedisCommand<null>;
 
-export function XADD(
-  stream: RedisStream,
+export function XADD<T extends TRedisStreamEntry>(
+  stream: RedisStream<T>,
   id: "*" | (string & {}),
-  data: Value<TRedisStreamEntry>,
+  data: Value<T>,
   ...modifiers: Modifiers
 ): RedisCommand<any> {
   return new RedisCommand([

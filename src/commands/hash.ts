@@ -52,13 +52,19 @@ export function HSET<T extends TRedisHash>(
   );
 }
 
-function encodeHashEntries(hash: RedisHash, values: object) {
+function encodeHashEntries<T extends TRedisHash>(
+  hash: RedisHash<T>,
+  values: object,
+) {
   const entries = Object.entries(values) as [string, RedisValue][];
   if (entries.length === 0) {
     throw new Error("At least one field must be provided");
   }
   for (let i = 0; i < entries.length; i++) {
-    entries[i][1] = hash.encodeField(entries[i][0], entries[i][1]);
+    entries[i][1] = hash.encodeField(
+      entries[i][0] as RedisField<T>,
+      entries[i][1],
+    );
   }
   return entries;
 }
