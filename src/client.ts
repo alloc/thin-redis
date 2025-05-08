@@ -13,7 +13,6 @@ type MaybeArray<T> = T | readonly T[];
 
 export class RedisClient {
   #encoder = new TextEncoder();
-  #decoder = new TextDecoder();
   #connected = false;
   #connection: Promise<ConnectionInstance> | null = null;
   #writeLock = Promise.resolve();
