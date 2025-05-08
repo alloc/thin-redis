@@ -1,6 +1,6 @@
 {
   "name": "thin-redis",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Redis/Valkey client for Node.js and Cloudflare Workers",
   "sideEffects": false,
   "scripts": {
