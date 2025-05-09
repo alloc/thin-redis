@@ -37,9 +37,12 @@ export class RedisKey<
    * Derive a new key by prefixing the current key with the given keys. When multiple keys are
    * passed in, they will be joined with a colon.
    */
-  join(...keys: (string | number)[]) {
+  join(...keys: (string | number)[]): this {
     if (keys.length === 0) return this;
-    return new RedisKey(`${this.name}:${keys.join(":")}`, this.schema);
+    return new (this.constructor as new (name: string, schema: T) => this)(
+      `${this.name}:${keys.join(":")}`,
+      this.schema,
+    );
   }
 
   /**
