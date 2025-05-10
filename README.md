@@ -64,3 +64,11 @@ Contributions welcome! Only the commands I've needed so far are implemented.
 - [XGROUP.CREATE](https://redis.io/docs/latest/commands/XGROUP.CREATE/)
 - [XREAD](https://redis.io/docs/latest/commands/XREAD/)
 - [XREADGROUP](https://redis.io/docs/latest/commands/XREADGROUP/)
+
+## Thanks
+
+This package is a fork of [redis-on-workers](https://github.com/kane50613/redis-on-workers) by [@kane50613](https://github.com/kane50613).
+
+## License
+
+[MIT](LICENSE)
