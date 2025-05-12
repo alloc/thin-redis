@@ -195,3 +195,10 @@ export class MessageEvent<T extends TSchema = TSchema> {
     this.#stream.readable.cancel(reason);
   }
 }
+
+export type ExtractMessageEvent<T extends SubscriptionKey> =
+  T extends SubscriptionKey<infer TSchema>
+    ? TSchema extends any
+      ? MessageEvent<TSchema>
+      : never
+    : never;

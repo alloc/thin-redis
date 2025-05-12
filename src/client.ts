@@ -1,8 +1,7 @@
-import { TSchema } from "@sinclair/typebox";
 import { castArrayIfExists } from "radashi";
 import { RedisChannel, RedisChannelPattern } from "./channel";
 import { Materialize, RedisCommand, RedisValue } from "./command";
-import { MessageEvent, Subscriber } from "./subscriber";
+import { ExtractMessageEvent, Subscriber } from "./subscriber";
 import { ConnectionInstance, RedisClientOptions, RedisResponse } from "./type";
 import { createParser } from "./utils/create-parser";
 import { encodeCommand } from "./utils/encode-command";
@@ -245,10 +244,12 @@ export class RedisClient {
    * You may unsubscribe through the `ReadableStream#cancel` or
    * `MessageEvent#cancel` methods.
    */
-  subscribe<T extends TSchema>(
-    pattern: MaybeArray<RedisChannel<T> | RedisChannelPattern<T>>,
+  subscribe<TPattern extends MaybeArray<RedisChannel | RedisChannelPattern>>(
+    pattern: TPattern,
     signal?: AbortSignal,
-  ): ReadableStream<MessageEvent<T>> {
+  ): ReadableStream<
+    ExtractMessageEvent<TPattern extends any[] ? TPattern[number] : TPattern>
+  > {
     const subscriber = (this.#subscriber ??= new Subscriber(this.options));
     return subscriber.subscribe(pattern, signal);
   }
