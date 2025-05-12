@@ -1,6 +1,7 @@
 import { TSchema, TString, Type } from "@sinclair/typebox";
 import { isString } from "radashi";
 import { RedisKey } from "./key";
+import { MessageEvent } from "./subscriber";
 import { RedisTransform } from "./transform";
 
 /**
@@ -25,6 +26,18 @@ export class RedisChannel<
   join(...keys: (string | number)[]) {
     if (keys.length === 0) return this;
     return new RedisChannel(`${this.name}:${keys.join(":")}`, this.schema);
+  }
+
+  /**
+   * Returns true if the event originated from this channel or a
+   * subchannel.
+   */
+  test(event: MessageEvent<any>): event is MessageEvent<T> {
+    return (
+      event.key === this ||
+      event.channel === this.name ||
+      event.channel.startsWith(this.name + ":")
+    );
   }
 }
 
