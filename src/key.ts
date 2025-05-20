@@ -3,6 +3,7 @@ import { StaticEncode, TObject, TSchema } from "@sinclair/typebox/type";
 import { Decode, Encode } from "@sinclair/typebox/value";
 import { RedisValue } from "./command";
 import { RedisTransform } from "./transform";
+import { JSONPath, resolveSchemaForJSONPath } from "./utils/json-path";
 
 /**
  * Represents a namespace of keys in a Redis database.
@@ -79,6 +80,40 @@ export class RedisEntity<
       schema: T,
     ): RedisEntity<T, string>;
   };
+}
+
+/**
+ * Represents a key in a Redis database with a JSON value.
+ *
+ * You must use `JSON.*` commands to read or edit this key's value. Of
+ * course, you may use key-focused commands (e.g. `DEL` may delete this
+ * key).
+ *
+ * @see https://redis.io/docs/latest/develop/data-types/json/
+ */
+export class RedisJSONEntity<
+  T extends TSchema = TSchema,
+  K extends string | RedisKeyspace = string,
+> extends RedisKey<T, K> {
+  declare $$typeof: "RedisKey" & { subtype: "RedisJSONEntity" };
+
+  encode(value: unknown, path?: JSONPath): RedisValue {
+    // The schema is defined for JS, not Redis, so a "decoded" value
+    // represents a Redis value.
+    return Decode(
+      path ? resolveSchemaForJSONPath(this.schema, path) : this.schema,
+      value,
+    );
+  }
+
+  decode(value: unknown, path?: JSONPath): StaticEncode<T> {
+    // The schema is defined for JS, not Redis, so an "encoded" value
+    // represents a JS value.
+    return Encode(
+      path ? resolveSchemaForJSONPath(this.schema, path) : this.schema,
+      value,
+    );
+  }
 }
 
 export class RedisSet<

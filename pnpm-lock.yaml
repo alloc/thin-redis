@@ -25,6 +25,9 @@ importers:
       '@types/node':
         specifier: ^22.7.5
         version: 22.7.5
+      jsonpath-ts:
+        specifier: ^0.1.1
+        version: 0.1.1(typescript@5.6.3)
       prettier:
         specifier: ^3.3.3
         version: 3.3.3
@@ -814,6 +817,16 @@ packages:
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
+
+  jsonpath-ts@0.0.1:
+    resolution: {integrity: sha512-RurtksdoTzVj90vSkElMNBJ6cyQMVOiR2Hu+3oCt4FMNU+DcXnXfgA5yjv1GKtTJ7a5O7yHgfwQVnFVPCKjzyQ==}
+    peerDependencies:
+      typescript: ^5.0.0
+
+  jsonpath-ts@0.1.1:
+    resolution: {integrity: sha512-AqvKujJo9vT2hqRRo+UatfHXeDLA2o2wkt6LBrJ17xi2WH67Zlc1stWdQGLDw99HinFoP+gdS73mtKPspMdlFg==}
+    peerDependencies:
+      typescript: ^5.0.0
 
   lilconfig@3.1.2:
     resolution: {integrity: sha512-eop+wDAvpItUys0FWkHIKeC9ybYrTGbU41U5K7+bttZZeohvnY7M9dZ5kB21GNWiFT2q1OoPTvncPCgSOVO5ow==}
@@ -1802,6 +1815,15 @@ snapshots:
       '@pkgjs/parseargs': 0.11.0
 
   joycon@3.1.1: {}
+
+  jsonpath-ts@0.0.1(typescript@5.6.3):
+    dependencies:
+      typescript: 5.6.3
+
+  jsonpath-ts@0.1.1(typescript@5.6.3):
+    dependencies:
+      jsonpath-ts: 0.0.1(typescript@5.6.3)
+      typescript: 5.6.3
 
   lilconfig@3.1.2: {}
 

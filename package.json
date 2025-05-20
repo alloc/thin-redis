@@ -58,6 +58,7 @@
     "@cloudflare/workers-types": "^4.20241011.0",
     "@sinclair/typebox": "^0.34.21",
     "@types/node": "^22.7.5",
+    "jsonpath-ts": "^0.1.1",
     "prettier": "^3.3.3",
     "prettier-plugin-organize-imports": "^4.1.0",
     "radashi": "13.0.0-beta.ffa4778",
