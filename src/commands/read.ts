@@ -1,6 +1,6 @@
 import { StaticEncode, TSchema } from "@sinclair/typebox";
 import { RedisCommand } from "../command";
-import { RedisKey } from "../key";
+import { RedisEntity } from "../key";
 import { RedisModifier } from "../modifier";
 
 /** Return the previous value stored at this key */
@@ -8,14 +8,14 @@ export type GET = RedisModifier<"GET">;
 
 /** Get the value of a key */
 export function GET<T extends TSchema>(
-  key: RedisKey<T>,
+  key: RedisEntity<T>,
 ): RedisCommand<StaticEncode<T> | undefined>;
 
 /** Return the previous value stored at this key */
 export function GET(): GET;
 
 export function GET<T extends TSchema>(
-  key?: RedisKey<T>,
+  key?: RedisEntity<T>,
 ): GET | RedisCommand<StaticEncode<T> | undefined> {
   if (!key) {
     return new RedisModifier("GET");

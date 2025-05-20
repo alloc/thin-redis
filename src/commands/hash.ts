@@ -1,32 +1,36 @@
-import { Static, StaticEncode } from "@sinclair/typebox";
+import { StaticEncode, TSchema } from "@sinclair/typebox";
 import { RedisCommand, RedisValue } from "../command";
-import { RedisField, RedisHash, TRedisHash } from "../key";
+import { RedisHash } from "../key";
+
+type RedisField<T extends Record<string, TSchema>> = keyof T & string;
 
 /**
  * Get the value of a field in a hash.
  */
-export function HGET<T extends TRedisHash, TField extends RedisField<T>>(
-  hash: RedisHash<T>,
-  field: TField,
-) {
-  return new RedisCommand<Static<T[TField]>>(
-    ["HGET", hash.name, field],
-    (result) => hash.decodeField(field, result),
+export function HGET<
+  T extends Record<string, TSchema>,
+  TField extends RedisField<T>,
+>(hash: RedisHash<T>, field: TField) {
+  return new RedisCommand(["HGET", hash.name, field as string], (result) =>
+    hash.decodeField(field, result),
   );
 }
 
 /**
  * Set the value of a field in a hash.
  */
-export function HSET<T extends TRedisHash, TField extends RedisField<T>>(
-  hash: RedisHash<T>,
-  field: TField,
-): never;
+export function HSET<
+  T extends Record<string, TSchema>,
+  TField extends RedisField<T>,
+>(hash: RedisHash<T>, field: TField): never;
 
 /**
  * Set the value of a field in a hash.
  */
-export function HSET<T extends TRedisHash, TField extends RedisField<T>>(
+export function HSET<
+  T extends Record<string, TSchema>,
+  TField extends RedisField<T>,
+>(
   hash: RedisHash<T>,
   field: TField,
   value: StaticEncode<T[TField]>,
@@ -35,12 +39,12 @@ export function HSET<T extends TRedisHash, TField extends RedisField<T>>(
 /**
  * Set the values of multiple fields in a hash.
  */
-export function HSET<T extends TRedisHash>(
+export function HSET<T extends Record<string, TSchema>>(
   hash: RedisHash<T>,
   values: { [K in RedisField<T>]?: StaticEncode<T[K]> },
 ): RedisCommand<number>;
 
-export function HSET<T extends TRedisHash>(
+export function HSET<T extends Record<string, TSchema>>(
   hash: RedisHash<T>,
   field: RedisField<T> | object,
   value?: unknown,
@@ -52,7 +56,7 @@ export function HSET<T extends TRedisHash>(
   );
 }
 
-function encodeHashEntries<T extends TRedisHash>(
+function encodeHashEntries<T extends Record<string, TSchema>>(
   hash: RedisHash<T>,
   values: object,
 ) {

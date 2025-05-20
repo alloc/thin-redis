@@ -1,6 +1,6 @@
 import { StaticEncode, TNumber, TSchema } from "@sinclair/typebox";
 import { RedisCommand } from "../command";
-import { RedisKey } from "../key";
+import { RedisEntity, RedisKey } from "../key";
 import { encodeModifiers, Modifiers, Require } from "../modifier";
 import {
   EX,
@@ -31,7 +31,7 @@ export function FLUSHALL(mode?: "sync" | "async") {
  * expired, the key will automatically be deleted.
  */
 export function EXPIRE(
-  key: RedisKey<any>,
+  key: RedisKey,
   timeout: number,
   ...modifiers: Modifiers<[XX | NX | GT | LT]>
 ) {
@@ -46,7 +46,7 @@ export function EXPIRE(
  * similar to {@link GET}, but is a write command with additional options.
  */
 export function GETEX<T extends TSchema>(
-  key: RedisKey<T>,
+  key: RedisEntity<T>,
   ...modifiers: Modifiers<[EX | PX | EXAT | PXAT | PERSIST]>
 ) {
   return new RedisCommand<StaticEncode<T> | undefined>(
@@ -59,7 +59,7 @@ export function GETEX<T extends TSchema>(
  * Set the value of a key and optionally set its expiration.
  */
 export function SET<T extends TSchema>(
-  key: RedisKey<T>,
+  key: RedisEntity<T>,
   value: StaticEncode<T>,
   ...modifiers: Modifiers<
     [NX | XX, Require<GET>, EX | PX | EXAT | PXAT | KEEPTTL]
@@ -67,14 +67,14 @@ export function SET<T extends TSchema>(
 ): RedisCommand<StaticEncode<T> | undefined>;
 
 export function SET<T extends TSchema>(
-  key: RedisKey<T>,
+  key: RedisEntity<T>,
   value: StaticEncode<T>,
   ...modifiers: Modifiers<[NX | XX, EX | PX | EXAT | PXAT | KEEPTTL]>
 ): RedisCommand<boolean>;
 
 export function SET(
-  key: RedisKey<any>,
-  value: StaticEncode<any>,
+  key: RedisEntity,
+  value: unknown,
   ...modifiers: Modifiers
 ): RedisCommand<any> {
   return new RedisCommand(
@@ -95,27 +95,27 @@ export function DEL(...keys: [RedisKey, ...RedisKey[]]) {
 /**
  * Decrement the value of a key by 1.
  */
-export function DECR(key: RedisKey<TNumber>) {
+export function DECR(key: RedisEntity<TNumber>) {
   return new RedisCommand<number>(["DECR", key.name]);
 }
 
 /**
  * Decrement the value of a key by a specific amount.
  */
-export function DECRBY(key: RedisKey<TNumber>, amount: number) {
+export function DECRBY(key: RedisEntity<TNumber>, amount: number) {
   return new RedisCommand<number>(["DECRBY", key.name, amount]);
 }
 
 /**
  * Increment the value of a key by 1.
  */
-export function INCR(key: RedisKey<TNumber>) {
+export function INCR(key: RedisEntity<TNumber>) {
   return new RedisCommand<number>(["INCR", key.name]);
 }
 
 /**
  * Increment the value of a key by a specific amount.
  */
-export function INCRBY(key: RedisKey<TNumber>, amount: number) {
+export function INCRBY(key: RedisEntity<TNumber>, amount: number) {
   return new RedisCommand<number>(["INCRBY", key.name, amount]);
 }

@@ -1,25 +1,18 @@
+import * as Type from "@sinclair/typebox/type";
 import {
   StaticEncode,
   TBoolean,
   TNumber,
   Transform,
   TSchema,
-  TypeGuard,
-} from "@sinclair/typebox";
+} from "@sinclair/typebox/type";
 import { Decode, Encode } from "@sinclair/typebox/value";
 import { RedisValue } from "./command";
-import { StaticHash, TRedisHash } from "./key";
 
-type Value<T extends TSchema | TRedisHash> = T extends TSchema
-  ? StaticEncode<T>
-  : StaticHash<T>;
-
-export abstract class RedisTransform<
-  T extends TSchema | TRedisHash = TSchema | TRedisHash,
-> {
+export abstract class RedisTransform<T extends TSchema = TSchema> {
   readonly schema: T;
   constructor(schema: T) {
-    this.schema = createRedisTransform(schema) as any;
+    this.schema = createRedisTransform(schema, this.constructor.name) as any;
   }
 
   /**
@@ -34,7 +27,7 @@ export abstract class RedisTransform<
   /**
    * Get a JS value from a Redis-encoded value.
    */
-  decode(value: unknown): Value<T> {
+  decode(value: unknown): StaticEncode<T> {
     // The schema is defined for JS, not Redis, so an "encoded" value
     // represents a JS value.
     return Encode(this.schema as TSchema, value);
@@ -47,13 +40,16 @@ export abstract class RedisTransform<
  * Note: The encode/decode methods are flipped, because TypeBox expects
  * transform types to operate on input values, not output values.
  */
-function createRedisTransform(schema: TSchema | TRedisHash) {
-  if (!TypeGuard.IsSchema(schema)) {
-    const newSchema = { ...schema };
-    for (const field in schema) {
-      newSchema[field] = createRedisTransform(schema[field]) as any;
+function createRedisTransform(schema: TSchema, instanceType?: string) {
+  if (instanceType === "RedisHash") {
+    if (schema.type !== "object" || !schema.properties) {
+      throw new Error("RedisHash must have an object schema with properties");
     }
-    return newSchema;
+    const newSchema = { ...schema.properties };
+    for (const field in schema.properties) {
+      newSchema[field] = createRedisTransform(schema.properties[field]) as any;
+    }
+    return Type.Object(newSchema);
   }
   if (schema.type !== "string" && schema.type !== "uint8array") {
     if (schema.type === "number") {

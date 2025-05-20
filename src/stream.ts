@@ -6,7 +6,7 @@ import {
   TString,
 } from "@sinclair/typebox";
 import { RedisValue } from "./command";
-import { RedisTransform } from "./transform";
+import { RedisKey, RedisKeyspace } from "./key";
 
 /** Any valid schema for a Redis stream entry. */
 export type TRedisStreamEntry =
@@ -25,14 +25,9 @@ export type RedisStreamPosition<
 
 export class RedisStream<
   T extends TRedisStreamEntry = TRedisStreamEntry,
-> extends RedisTransform<T> {
-  declare $$typeof: "RedisStream";
-  constructor(
-    readonly name: string,
-    entrySchema: T,
-  ) {
-    super(entrySchema);
-  }
+  K extends string | RedisKeyspace = string,
+> extends RedisKey<T, K> {
+  declare $$typeof: "RedisKey" & { subtype: "RedisStream" };
 
   /**
    * For use with `XREAD` or `XREADGROUP`. Defines which ID was last delivered to the
@@ -59,7 +54,7 @@ export class RedisStreamEntry<T extends TRedisStreamEntry = TRedisStreamEntry> {
   readonly data: StaticEncode<T>;
   constructor(
     /** The stream this entry belongs to */
-    readonly stream: RedisStream<T>,
+    readonly stream: RedisStream<T, string>,
     /** The ID of this entry */
     readonly id: string,
     /** The fields and values of this entry */

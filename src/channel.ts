@@ -1,6 +1,6 @@
 import { TSchema, TString, Type } from "@sinclair/typebox";
 import { isString } from "radashi";
-import { RedisKey } from "./key";
+import { RedisKey, RedisKeyspace } from "./key";
 import { MessageEvent } from "./subscriber";
 import { RedisTransform } from "./transform";
 
@@ -9,23 +9,31 @@ import { RedisTransform } from "./transform";
  */
 export class RedisChannel<
   T extends TSchema = TSchema,
+  K extends string | RedisKeyspace = string,
 > extends RedisTransform<T> {
   declare $$typeof: "RedisChannel";
   constructor(
-    readonly name: string,
+    readonly name: K,
     schema: T,
   ) {
     super(schema);
   }
 
   /**
-   * Derive a subchannel by prefixing the current channel with the given
-   * keys. When multiple keys are passed in, they will be joined with a
-   * colon.
+   * Creates a new channel within a namespace.
    */
-  join(...keys: (string | number)[]) {
-    if (keys.length === 0) return this;
-    return new RedisChannel(`${this.name}:${keys.join(":")}`, this.schema);
+  qualify(
+    name: K extends RedisKeyspace<infer Key> ? Key : string | number,
+  ): RedisChannel<T, string>;
+  qualify<T extends TSchema>(
+    name: K extends RedisKeyspace<infer Key> ? Key : string | number,
+    schema: T,
+  ): RedisChannel<T, string>;
+  qualify(
+    name: K extends RedisKeyspace<infer Key> ? Key : string | number,
+    schema: TSchema = this.schema,
+  ) {
+    return new RedisChannel<any>(`${this.name}:${name}`, schema);
   }
 
   /**
@@ -62,7 +70,7 @@ export class RedisChannelPattern<
  * [1]: https://redis.io/docs/latest/develop/use/keyspace-notifications/
  */
 export class RedisKeyspacePattern extends RedisChannelPattern<TString> {
-  constructor(pattern: string | RedisKey, database?: number) {
+  constructor(pattern: string | RedisKey | RedisKeyspace, database?: number) {
     super(
       `__keyspace@${database ?? "*"}__:${isString(pattern) ? pattern : pattern.name}`,
       Type.String(),

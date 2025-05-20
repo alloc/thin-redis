@@ -1,88 +1,139 @@
-import { StaticEncode, TSchema } from "@sinclair/typebox";
+import * as Type from "@sinclair/typebox/type";
+import { StaticEncode, TObject, TSchema } from "@sinclair/typebox/type";
 import { Decode, Encode } from "@sinclair/typebox/value";
 import { RedisValue } from "./command";
 import { RedisTransform } from "./transform";
 
-export type TRedisHash<TValue extends TSchema = TSchema> = Record<
-  string,
-  TValue
->;
+/**
+ * Represents a namespace of keys in a Redis database.
+ */
+export class RedisKeyspace<K extends string | number = string | number> {
+  declare $$typeof: "RedisKeyspace" & { K: K };
+  constructor(readonly name: string) {}
 
-export type StaticHash<T extends TRedisHash> = {
-  [K in RedisField<T>]: StaticEncode<T[K]>;
-};
+  /**
+   * Creates a string pattern that matches all keys in the keyspace.
+   *
+   * You may pass this to the `RedisKeyspacePattern` constructor.
+   */
+  any() {
+    return `${this.name}:*` as const;
+  }
+}
 
 /**
- * A field name of a Redis key that points to a hash map.
+ * Represents a key in a Redis database with an unknown data structure. For
+ * example, it could be a primitive, hash, stream, etc.
  */
-export type RedisField<T extends TSchema | TRedisHash> = T extends TSchema
-  ? never
-  : Extract<keyof T, string>;
-
-/**
- * A Redis key that points to a primitive value or a hash map.
- */
-export class RedisKey<
-  T extends TSchema | TRedisHash = TSchema | TRedisHash,
+export abstract class RedisKey<
+  T extends TSchema = TSchema,
+  K extends string | RedisKeyspace = string,
 > extends RedisTransform<T> {
   declare $$typeof: "RedisKey";
+
   constructor(
-    readonly name: string,
-    schema: T,
+    readonly name: K,
+    schema: T = Type.Unknown() as T,
   ) {
     super(schema);
   }
 
   /**
-   * Derive a new key by prefixing the current key with the given keys. When multiple keys are
-   * passed in, they will be joined with a colon.
+   * Creates a new key within a namespace.
    */
-  join(...keys: (string | number)[]): this {
-    if (keys.length === 0) return this;
-    return new (this.constructor as new (name: string, schema: T) => this)(
-      `${this.name}:${keys.join(":")}`,
-      this.schema,
-    );
-  }
+  qualify(
+    name: K extends RedisKeyspace<infer Key> ? Key : string | number,
+  ): RedisKey<T, string>;
+  qualify<T extends TSchema>(
+    name: K extends RedisKeyspace<infer Key> ? Key : string | number,
+    schema: T,
+  ): RedisKey<T, string>;
+  qualify(
+    name: K extends RedisKeyspace<infer Key> ? Key : string | number,
+    schema: TSchema = this.schema,
+  ) {
+    const RedisKey = this.constructor as new (
+      name: string,
+      schema: TSchema,
+    ) => any;
 
-  /**
-   * Use this key as a namespace for a pattern. The `pattern` is appended
-   * to the current key with a colon between them.
-   */
-  match(pattern: string) {
-    return this.name + ":" + pattern;
+    return new RedisKey(`${this.name}:${name}`, schema);
   }
 }
 
-export class RedisSet<T extends TSchema = TSchema> extends RedisKey<T> {
+/**
+ * Represents a key in a Redis database with a single datum, like a
+ * primitive or a JSON object.
+ */
+export class RedisEntity<
+  T extends TSchema = TSchema,
+  K extends string | RedisKeyspace = string,
+> extends RedisKey<T, K> {
+  declare $$typeof: "RedisKey" & { subtype: "RedisEntity" };
+  declare qualify: {
+    (
+      name: K extends RedisKeyspace<infer Key> ? Key : string | number,
+    ): RedisEntity<T, string>;
+    <T extends TSchema>(
+      name: K extends RedisKeyspace<infer Key> ? Key : string | number,
+      schema: T,
+    ): RedisEntity<T, string>;
+  };
+}
+
+export class RedisSet<
+  T extends TSchema = TSchema,
+  K extends string | RedisKeyspace = string,
+> extends RedisKey<T, K> {
   declare $$typeof: "RedisKey" & { subtype: "RedisSet" };
+  declare qualify: {
+    (
+      name: K extends RedisKeyspace<infer Key> ? Key : string | number,
+    ): RedisSet<T, string>;
+    <T extends TSchema>(
+      name: K extends RedisKeyspace<infer Key> ? Key : string | number,
+      schema: T,
+    ): RedisSet<T, string>;
+  };
 }
 
-export class RedisHash<T extends TRedisHash = TRedisHash> extends RedisKey<T> {
+export class RedisHash<
+  T extends Record<string, TSchema> = Record<string, TSchema>,
+  K extends string | RedisKeyspace = string,
+> extends RedisKey<TObject<T>, K> {
   declare $$typeof: "RedisKey" & { subtype: "RedisHash" };
+  declare qualify: {
+    (
+      name: K extends RedisKeyspace<infer Key> ? Key : string | number,
+    ): RedisHash<T, string>;
+    <T extends TSchema>(
+      name: K extends RedisKeyspace<infer Key> ? Key : string | number,
+      schema: T,
+    ): RedisHash<T, string>;
+  };
 
   /**
    * Like `encode`, but for keys that point to a hash map.
    */
-  encodeField<TField extends RedisField<T>>(
+  encodeField<TField extends keyof T>(
     field: TField,
     value: StaticEncode<T[TField]>,
   ): RedisValue {
     // The schema is defined for JS, not Redis, so a "decoded" value
     // represents a Redis value.
-    return Decode(this.schema[field], value) as any;
+    return Decode(this.schema.properties[field], value) as any;
   }
 
   /**
    * Like `decode`, but for keys that point to a hash map.
    */
-  decodeField<TField extends RedisField<T>>(
+  decodeField<TField extends keyof T>(
     field: TField,
     value: unknown,
-  ): T extends TSchema ? never : StaticEncode<T[TField]> {
+  ): StaticEncode<T[TField]> {
     // The schema is defined for JS, not Redis, so an "encoded" value
     // represents a JS value.
-    return Encode(this.schema[field], value);
+    return Encode(this.schema.properties[field], value);
   }
 }
 
