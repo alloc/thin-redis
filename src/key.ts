@@ -172,6 +172,31 @@ export class RedisHash<
   }
 }
 
+export class RedisSortedSet<
+  T extends TSchema = TSchema,
+  K extends string | RedisKeyspace = string,
+> extends RedisKey<T, K> {
+  declare $$typeof: "RedisKey" & { subtype: "RedisSortedSet" };
+  declare qualify: {
+    (
+      name: K extends RedisKeyspace<infer KeyType> ? KeyType : string | number,
+    ): RedisSortedSet<T, string>;
+    <T extends TSchema>(
+      name: K extends RedisKeyspace<infer KeyType> ? KeyType : string | number,
+      schema: T,
+    ): RedisSortedSet<T, string>;
+  };
+}
+
+export class RedisSortedSetEntry<T extends TSchema> {
+  declare $$typeof: "RedisSortedSetEntry";
+  constructor(
+    public readonly key: RedisSortedSet<T>,
+    public readonly data: StaticEncode<T>,
+    public readonly score: number,
+  ) {}
+}
+
 export class RedisIndex {
   declare $$typeof: "RedisIndex";
   constructor(readonly name: string) {}
