@@ -19,11 +19,16 @@ const commands = extractCommands(mod)
   )
   .sort();
 
+const redirects = {
+  "XGROUP.CREATE": "XGROUP-CREATE",
+};
+
 console.log(
   "- " +
     commands
       .map(
-        (name) => `[${name}](https://redis.io/docs/latest/commands/${name}/)`,
+        (name) =>
+          `[${name}](https://redis.io/docs/latest/commands/${redirects[name] ?? name}/)`,
       )
       .join("\n- "),
 );

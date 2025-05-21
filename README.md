@@ -24,12 +24,15 @@ Supported features include:
 - [ ] [JSON](https://redis.io/docs/latest/develop/data-types/json/) (basic)
 - [ ] [Hashes](https://redis.io/docs/latest/develop/data-types/hashes/) (basic)
 - [ ] [Sets](https://redis.io/docs/latest/develop/data-types/sets/) (basic)
+- [ ] [Sorted sets](https://redis.io/docs/latest/develop/data-types/sorted-sets/) (basic)
 - [ ] [Full-text search](https://redis.io/docs/latest/develop/interact/search-and-query/query/full-text/) (basic)
 
 ## Commands
 
 Contributions welcome! Only the commands I've needed so far are implemented.
 
+- [BZPOPMAX](https://redis.io/docs/latest/commands/BZPOPMAX/)
+- [BZPOPMIN](https://redis.io/docs/latest/commands/BZPOPMIN/)
 - [DECR](https://redis.io/docs/latest/commands/DECR/)
 - [DECRBY](https://redis.io/docs/latest/commands/DECRBY/)
 - [DEL](https://redis.io/docs/latest/commands/DEL/)
@@ -61,9 +64,11 @@ Contributions welcome! Only the commands I've needed so far are implemented.
 - [XACK](https://redis.io/docs/latest/commands/XACK/)
 - [XADD](https://redis.io/docs/latest/commands/XADD/)
 - [XDEL](https://redis.io/docs/latest/commands/XDEL/)
-- [XGROUP.CREATE](https://redis.io/docs/latest/commands/XGROUP.CREATE/)
+- [XGROUP.CREATE](https://redis.io/docs/latest/commands/XGROUP-CREATE/)
 - [XREAD](https://redis.io/docs/latest/commands/XREAD/)
 - [XREADGROUP](https://redis.io/docs/latest/commands/XREADGROUP/)
+- [ZADD](https://redis.io/docs/latest/commands/ZADD/)
+- [ZREM](https://redis.io/docs/latest/commands/ZREM/)
 
 ## Thanks
 
