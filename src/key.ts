@@ -1,6 +1,7 @@
 import * as Type from "@sinclair/typebox/type";
 import { StaticEncode, TObject, TSchema } from "@sinclair/typebox/type";
 import { Decode, Encode } from "@sinclair/typebox/value";
+import { isString } from "radashi";
 import { RedisValue } from "./command";
 import { RedisTransform } from "./transform";
 import { JSONPath, resolveSchemaForJSONPath } from "./utils/json-path";
@@ -58,7 +59,10 @@ export abstract class RedisKey<
       schema: TSchema,
     ) => any;
 
-    return new RedisKey(`${this.name}:${name}`, schema);
+    return new RedisKey(
+      `${isString(this.name) ? this.name : this.name.name}:${name}`,
+      schema,
+    );
   }
 }
 

@@ -33,7 +33,10 @@ export class RedisChannel<
     name: K extends RedisKeyspace<infer Key> ? Key : string | number,
     schema: TSchema = this.schema,
   ) {
-    return new RedisChannel<any>(`${this.name}:${name}`, schema);
+    return new RedisChannel<any>(
+      `${isString(this.name) ? this.name : this.name.name}:${name}`,
+      schema,
+    );
   }
 
   /**
