@@ -219,6 +219,7 @@ export class RedisClient {
     commands: ([string, ...RedisValue[]] | undefined)[],
     writer: WritableStreamDefaultWriter<Uint8Array>,
   ) {
+    const stack = new Error().stack;
     const chunks: Array<string | Uint8Array> = [];
     const promises = commands.map((command) => {
       if (!command) {
@@ -226,7 +227,13 @@ export class RedisClient {
       }
       encodeCommand(command, chunks);
       return new Promise<RedisResponse>((resolve, reject) => {
-        this.#responseQueue.push({ resolve, reject });
+        this.#responseQueue.push({
+          resolve,
+          reject(error) {
+            error.stack = stack;
+            reject(error);
+          },
+        });
       });
     });
     for (const chunk of chunks) {
