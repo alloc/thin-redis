@@ -6,7 +6,7 @@ import {
   PING,
   RedisClient,
   RedisCommand,
-  RedisKey,
+  RedisEntity,
   RedisSet,
   SADD,
   SCARD,
@@ -45,7 +45,7 @@ test("send", async () => {
 
   expect(await redis.sendRaw(PING())).toEqual(PONG);
 
-  const foo = new RedisKey("foo", Type.String());
+  const foo = new RedisEntity("foo", Type.String());
 
   expect(await redis.send(SET(foo, "bar"))).toEqual(true);
   expect(await redis.send(GET(foo))).toEqual("bar");

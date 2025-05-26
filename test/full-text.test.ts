@@ -7,7 +7,7 @@ import {
   PREFIX,
   RedisClient,
   RedisIndex,
-  RedisKey,
+  RedisJSONEntity,
 } from "../src";
 
 test("full text search", async () => {
@@ -31,9 +31,16 @@ test("full text search", async () => {
     "OK",
   ).toEqual("OK");
 
+  const jsonKey = new RedisJSONEntity(
+    "doc:1",
+    Type.Object({
+      field1: Type.String(),
+    }),
+  );
+
   expect(
     await redis.send(
-      JSON.SET(new RedisKey("doc:1", Type.Any()), "$", {
+      JSON.SET(jsonKey, "$", {
         field1: "value1",
       }),
     ),
