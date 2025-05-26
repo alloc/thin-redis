@@ -18,9 +18,9 @@ export function ZADD<T extends TSchema>(
   if (entries.length === 0) {
     throw new Error("At least one entry is required");
   }
-  const flatEntries: RedisValue[] = new Array(entries.length * 2);
+  const flatEntries: RedisValue[] = [];
   for (const [score, value] of entries) {
-    flatEntries.push(score);
+    flatEntries.push(String(score));
     flatEntries.push(key.encode(value));
   }
   return new RedisCommand<number>(["ZADD", key.name, ...flatEntries]);
