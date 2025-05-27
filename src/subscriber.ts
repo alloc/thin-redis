@@ -141,10 +141,8 @@ export class Subscriber {
         }
 
         const state = subs.get(key.name);
-        if (state && state.streams.delete(stream) && state.streams.size === 0) {
-          subs.delete(key.name);
-
-          if (subs.size === 0) {
+        if (state?.streams.delete(stream) && state.streams.size === 0) {
+          if (subs.delete(key.name) && subs.size === 0) {
             await self.close();
           } else {
             await self.client.sendRaw(new RedisCommand([command, key.name]));
@@ -164,11 +162,11 @@ export class Subscriber {
 
   private dispatch(
     channel: string,
-    message: RedisValue,
+    payload: RedisValue,
     state: SubscriptionState | undefined,
   ): void {
     state?.streams.forEach(({ key, writer }, stream) => {
-      writer.write(new MessageEvent(key.decode(message), channel, key, stream));
+      writer.write(new MessageEvent(key.decode(payload), channel, key, stream));
     });
   }
 }
