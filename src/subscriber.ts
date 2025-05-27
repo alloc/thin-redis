@@ -168,7 +168,7 @@ export class Subscriber {
     state: SubscriptionState | undefined,
   ): void {
     state?.streams.forEach(({ key, writer }, stream) => {
-      writer.write(new MessageEvent(message, channel, key, stream));
+      writer.write(new MessageEvent(key.decode(message), channel, key, stream));
     });
   }
 }
