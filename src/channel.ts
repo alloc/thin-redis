@@ -3,6 +3,7 @@ import { isString } from "radashi";
 import { RedisKey, RedisKeyspace } from "./key";
 import { MessageEvent } from "./subscriber";
 import { RedisTransform } from "./transform";
+import { resolveName } from "./utils/resolve-name";
 
 /**
  * Channels use the `SUBSCRIBE` command.
@@ -33,10 +34,7 @@ export class RedisChannel<
     name: K extends RedisKeyspace<infer Key> ? Key : string | number,
     schema: TSchema = this.schema,
   ) {
-    return new RedisChannel<any>(
-      `${isString(this.name) ? this.name : this.name.name}:${name}`,
-      schema,
-    );
+    return new RedisChannel<any>(`${resolveName(this)}:${name}`, schema);
   }
 
   /**
@@ -44,10 +42,11 @@ export class RedisChannel<
    * subchannel.
    */
   test(event: MessageEvent<any>): event is MessageEvent<T> {
+    const name = resolveName(this);
     return (
       event.key === this ||
-      event.channel === this.name ||
-      event.channel.startsWith(this.name + ":")
+      event.channel === name ||
+      event.channel.startsWith(name + ":")
     );
   }
 }

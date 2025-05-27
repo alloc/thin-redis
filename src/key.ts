@@ -1,10 +1,10 @@
 import * as Type from "@sinclair/typebox/type";
 import { StaticEncode, TObject, TSchema } from "@sinclair/typebox/type";
 import { Decode, Encode } from "@sinclair/typebox/value";
-import { isString } from "radashi";
 import { RedisValue } from "./command";
 import { RedisTransform } from "./transform";
 import { JSONPath, resolveSchemaForJSONPath } from "./utils/json-path";
+import { resolveName } from "./utils/resolve-name";
 
 /**
  * Represents a namespace of keys in a Redis database.
@@ -59,10 +59,7 @@ export abstract class RedisKey<
       schema: TSchema,
     ) => any;
 
-    return new RedisKey(
-      `${isString(this.name) ? this.name : this.name.name}:${name}`,
-      schema,
-    );
+    return new RedisKey(`${resolveName(this)}:${name}`, schema);
   }
 }
 
