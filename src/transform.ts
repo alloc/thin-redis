@@ -12,7 +12,7 @@ import { RedisValue } from "./command";
 export abstract class RedisTransform<T extends TSchema = TSchema> {
   readonly schema: T;
   constructor(schema: T) {
-    this.schema = createRedisTransform(schema, this.constructor.name) as any;
+    this.schema = wrapSchemaForRedis(schema, this.constructor.name) as any;
   }
 
   /**
@@ -34,37 +34,44 @@ export abstract class RedisTransform<T extends TSchema = TSchema> {
   }
 }
 
+const wrappedSchemas = new WeakSet<TSchema>();
+
 /**
  * Wrap the JavaScript types with Redis-targeted transform types.
  *
  * Note: The encode/decode methods are flipped, because TypeBox expects
  * transform types to operate on input values, not output values.
  */
-function createRedisTransform(schema: TSchema, instanceType?: string) {
+function wrapSchemaForRedis(schema: TSchema, instanceType?: string) {
+  if (wrappedSchemas.has(schema)) {
+    return schema;
+  }
+
   if (instanceType === "RedisHash") {
     if (schema.type !== "object" || !schema.properties) {
       throw new Error("RedisHash must have an object schema with properties");
     }
     const newSchema = { ...schema.properties };
     for (const field in schema.properties) {
-      newSchema[field] = createRedisTransform(schema.properties[field]) as any;
+      newSchema[field] = wrapSchemaForRedis(schema.properties[field]) as any;
     }
-    return Type.Object(newSchema);
-  }
-  if (schema.type !== "string" && schema.type !== "uint8array") {
+    schema = Type.Object(newSchema);
+  } else if (schema.type !== "string" && schema.type !== "uint8array") {
     if (schema.type === "number") {
-      return Transform(schema as TNumber)
+      schema = Transform(schema as TNumber)
         .Decode((value) => String(value))
         .Encode((value) => Number(value));
-    }
-    if (schema.type === "boolean") {
-      return Transform(schema as TBoolean)
+    } else if (schema.type === "boolean") {
+      schema = Transform(schema as TBoolean)
         .Decode((value) => (value ? "1" : "0"))
         .Encode((value) => value === "1");
+    } else {
+      schema = Transform(schema)
+        .Decode((value) => JSON.stringify(value))
+        .Encode((value) => JSON.parse(value));
     }
-    return Transform(schema)
-      .Decode((value) => JSON.stringify(value))
-      .Encode((value) => JSON.parse(value));
   }
+
+  wrappedSchemas.add(schema);
   return schema;
 }
