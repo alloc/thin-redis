@@ -19,9 +19,6 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20241011.0
         version: 4.20241011.0
-      '@sinclair/typebox':
-        specifier: ^0.34.21
-        version: 0.34.21
       '@types/node':
         specifier: ^22.7.5
         version: 22.7.5
@@ -52,6 +49,9 @@ importers:
       vitest:
         specifier: ^3.0.6
         version: 3.0.6(@types/node@22.7.5)(tsx@4.19.1)
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
 
 packages:
 
@@ -556,9 +556,6 @@ packages:
     resolution: {integrity: sha512-U0FaE5O1BCpZSeE6gBl3c5ObhePQSfk9vDRToMmTkbhCOgW4jqvtS5LGyQ76L1fH8sM0keRp4uDTsbjiUyjk0g==}
     cpu: [x64]
     os: [win32]
-
-  '@sinclair/typebox@0.34.21':
-    resolution: {integrity: sha512-G+7YVIZalo+N+h7KapWBxRH2at9yO4yIHq49PkQLTQQkPTM0ZYaPOfPDpeNv/ukWjm8a1GdnO3yDC7bietT23A==}
 
   '@types/estree@1.0.6':
     resolution: {integrity: sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==}
@@ -1245,6 +1242,9 @@ packages:
     resolution: {integrity: sha512-si7QWI6zUMq56bESFvagtmzMdGOtoxfR+Sez11Mobfc7tm+VkUckk9bW2UeffTGVUbOksxmSw0AA2gs8g71NCQ==}
     engines: {node: '>=12'}
 
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
+
 snapshots:
 
   '@arrowood.dev/socket@0.2.0(patch_hash=bbe6963f89e1d3657233b7d96e2c5fd06b6850f912bd68676d5245fd862be9f4)': {}
@@ -1531,8 +1531,6 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.34.8':
     optional: true
-
-  '@sinclair/typebox@0.34.21': {}
 
   '@types/estree@1.0.6': {}
 
@@ -2222,3 +2220,5 @@ snapshots:
       ansi-styles: 6.2.1
       string-width: 5.1.2
       strip-ansi: 7.1.0
+
+  zod@4.1.12: {}

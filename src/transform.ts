@@ -1,15 +1,9 @@
-import * as Type from "@sinclair/typebox/type";
-import {
-  StaticEncode,
-  TBoolean,
-  TNumber,
-  Transform,
-  TSchema,
-} from "@sinclair/typebox/type";
-import { Decode, Encode } from "@sinclair/typebox/value";
+import * as z from 'zod/v4/classic'
 import { RedisValue } from "./command";
 
-export abstract class RedisTransform<T extends TSchema = TSchema> {
+type ZodRedisType = z.ZodType<unknown, RedisValue>
+
+export abstract class RedisTransform<T extends ZodRedisType = ZodRedisType> {
   readonly schema: T;
   constructor(schema: T) {
     this.schema = wrapSchemaForRedis(schema, this.constructor.name) as any;
@@ -18,10 +12,8 @@ export abstract class RedisTransform<T extends TSchema = TSchema> {
   /**
    * Get a Redis-encoded value from a JS value.
    */
-  encode(value: unknown): RedisValue {
-    // The schema is defined for JS, not Redis, so a "decoded" value
-    // represents a Redis value.
-    return Decode(this.schema as TSchema, value);
+  encode(value: z.output<T>): RedisValue {
+    return this.schema.encode(value)
   }
 
   /**
