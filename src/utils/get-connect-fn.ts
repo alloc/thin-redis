@@ -17,7 +17,7 @@ export async function getConnectFn(fn?: RedisClientOptions["connectFn"]) {
         "@arrowood.dev/socket"
       );
 
-      return connect;
+      return connect as typeof import("cloudflare:sockets").connect;
     } catch (e) {
       throw new Error("No socket provider found");
     }

@@ -1,4 +1,3 @@
-import type { connect as nodeConnect, Socket } from "@arrowood.dev/socket";
 import type { connect } from "cloudflare:sockets";
 
 export type RedisResponse = Uint8Array | number | null | RedisResponse[];
@@ -23,7 +22,7 @@ export type RedisConnectionOptions =
 
 export type RedisClientOptions = {
   tls?: boolean;
-  connectFn?: typeof connect | typeof nodeConnect;
+  connectFn?: typeof connect;
   onReply?: (reply: RedisResponse) => boolean;
 } & RedisConnectionOptions;
 
@@ -42,8 +41,10 @@ export type Redis = ((
   ) => Promise<Buffer | null>;
 };
 
+export type Socket = ReturnType<typeof connect>;
+
 export interface ConnectionInstance {
-  writer: WritableStreamDefaultWriter<Uint8Array>;
-  reader: ReadableStreamDefaultReader<Uint8Array>;
-  socket: Socket | ReturnType<typeof connect>;
+  writer: WritableStreamDefaultWriter<any>;
+  reader: ReadableStreamDefaultReader<any>;
+  socket: Socket;
 }
