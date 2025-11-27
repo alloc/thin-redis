@@ -267,9 +267,9 @@ export class RedisClient {
     this.#connection = null;
     this.#writeLock = Promise.resolve();
 
-    await connection.socket.close();
-    await connection.writer.abort(err);
     await connection.reader.cancel(err);
+    await connection.writer.abort(err);
+    await connection.socket.close();
   }
 
   public async closeSubscriptions() {
