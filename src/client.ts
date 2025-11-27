@@ -112,8 +112,13 @@ export class RedisClient {
     })();
 
     // Listen for socket close events and parse responses.
-    this.#connection
-      .then(async (connection) => {
+    this.#connection.then(async (connection) => {
+      let closed = false;
+      connection.socket.closed.then(() => {
+        closed = true;
+      });
+
+      try {
         while (true) {
           const result = await connection.reader.read();
           if (!result) {
@@ -126,12 +131,12 @@ export class RedisClient {
             break;
           }
         }
-      })
-      .catch((error) => {
-        if (error) {
+      } catch (error) {
+        if (!closed && this.#connection) {
           console.error(error);
         }
-      });
+      }
+    });
 
     if (this.config.password || this.config.database) {
       // AUTH and SELECT block all other commands until they are resolved.
