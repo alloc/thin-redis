@@ -2,7 +2,7 @@ import { castArrayIfExists } from "radashi";
 import { RedisChannel, RedisChannelPattern } from "./channel";
 import { Materialize, RedisCommand, RedisValue } from "./command";
 import { ExtractMessageEvent, Subscriber } from "./subscriber";
-import { ConnectionInstance, RedisClientOptions, RedisResponse } from "./type";
+import { RedisClientOptions, RedisResponse } from "./type";
 import { createParser } from "./utils/create-parser";
 import { encodeCommand } from "./utils/encode-command";
 import { getConnectFn } from "./utils/get-connect-fn";
@@ -13,7 +13,7 @@ type MaybeArray<T> = T | readonly T[];
 export class RedisClient {
   #encoder = new TextEncoder();
   #connected = false;
-  #connection: Promise<ConnectionInstance> | null = null;
+  #connection: Promise<Socket> | null = null;
   #writeLock = Promise.resolve();
   #responseQueue: {
     resolve: (value: RedisResponse) => void;
@@ -90,7 +90,6 @@ export class RedisClient {
 
     this.#connection = (async () => {
       const connect = await getConnectFn(this.options.connectFn);
-
       const socket = connect(
         {
           hostname: this.config.hostname,
@@ -102,45 +101,33 @@ export class RedisClient {
         },
       );
 
+      socket.closed.then(this.onClose, this.onClose);
       await socket.opened;
 
-      return {
-        socket,
-        writer: socket.writable.getWriter(),
-        reader: socket.readable.getReader(),
-      };
+      return socket;
     })();
 
     // Listen for socket close events and parse responses.
-    this.#connection.then(async (connection) => {
-      let closed = false;
-      connection.socket.closed.then(() => {
-        closed = true;
-      });
-
-      try {
-        while (true) {
-          const result = await connection.reader.read();
-          if (!result) {
-            break;
-          }
-          if (result.value) {
-            this.parser(result.value);
-          }
-          if (result.done) {
-            break;
-          }
+    this.#connection.then(async (socket) => {
+      const reader = socket.readable.getReader();
+      while (true) {
+        const result = await reader.read().catch(() => null);
+        if (!result) {
+          break;
         }
-      } catch (error) {
-        if (!closed && this.#connection) {
-          console.error(error);
+        if (result.value) {
+          this.parser(result.value);
+        }
+        if (result.done) {
+          reader.releaseLock();
+          break;
         }
       }
     });
 
     if (this.config.password || this.config.database) {
       // AUTH and SELECT block all other commands until they are resolved.
-      this.#connection = this.#connection.then(async (connection) => {
+      this.#connection = this.#connection.then(async (socket) => {
         const commands: [string, ...RedisValue[]][] = [];
         if (this.config.password) {
           const username = castArrayIfExists(this.config.username) ?? [];
@@ -151,11 +138,11 @@ export class RedisClient {
         }
 
         // Wait for writing to finish...
-        const promises = await this.writeCommands(commands, connection.writer);
+        const promises = await this.writeCommands(commands, socket);
         // Then wait for all commands to finish...
         await Promise.all(promises);
 
-        return connection;
+        return socket;
       });
     }
 
@@ -200,7 +187,7 @@ export class RedisClient {
   ): Promise<any>;
 
   public async sendRaw(command: RedisCommand | (RedisCommand | undefined)[]) {
-    const connection = await this.connect();
+    const socket = await this.connect();
 
     let promises: (Promise<RedisResponse> | undefined)[];
 
@@ -208,7 +195,7 @@ export class RedisClient {
     await (this.#writeLock = this.#writeLock.then(async () => {
       promises = await this.writeCommands(
         Array.isArray(command) ? command.map((c) => c?.args) : [command.args],
-        connection.writer,
+        socket,
       );
     }));
 
@@ -221,7 +208,7 @@ export class RedisClient {
 
   private async writeCommands(
     commands: ([string, ...RedisValue[]] | undefined)[],
-    writer: WritableStreamDefaultWriter<Uint8Array>,
+    socket: Socket,
   ) {
     const stack = new Error().stack;
     const chunks: Array<string | Uint8Array> = [];
@@ -240,11 +227,14 @@ export class RedisClient {
         });
       });
     });
+
+    const writer = socket.writable.getWriter();
     for (const chunk of chunks) {
       await writer.write(
         chunk instanceof Uint8Array ? chunk : this.#encoder.encode(chunk),
       );
     }
+    writer.releaseLock();
     return promises;
   }
 
@@ -255,7 +245,9 @@ export class RedisClient {
    * You may unsubscribe through the `ReadableStream#cancel` or
    * `MessageEvent#cancel` methods.
    */
-  subscribe<TPattern extends MaybeArray<RedisChannel | RedisChannelPattern>>(
+  public subscribe<
+    TPattern extends MaybeArray<RedisChannel | RedisChannelPattern>,
+  >(
     pattern: TPattern,
     signal?: AbortSignal,
   ): ReadableStream<
@@ -265,16 +257,15 @@ export class RedisClient {
     return subscriber.subscribe(pattern, signal);
   }
 
-  public async close(err?: Error) {
-    if (!this.#connection) return;
-
-    const connection = await this.#connection;
+  private onClose = () => {
     this.#connection = null;
     this.#writeLock = Promise.resolve();
+  };
 
-    await connection.reader.cancel(err);
-    await connection.writer.abort(err);
-    await connection.socket.close();
+  public async close() {
+    if (!this.#connection) return;
+    const socket = await this.#connection;
+    await socket.close();
   }
 
   public async closeSubscriptions() {

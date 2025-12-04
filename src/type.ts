@@ -42,9 +42,3 @@ export type Redis = ((
 };
 
 export type Socket = ReturnType<typeof connect>;
-
-export interface ConnectionInstance {
-  writer: WritableStreamDefaultWriter<any>;
-  reader: ReadableStreamDefaultReader<any>;
-  socket: Socket;
-}
